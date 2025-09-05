@@ -18,7 +18,7 @@ async function handleRegistro(e) {
     };
     
     try {
-        const response = await fetch('http://localhost:3000/api/registro', {
+        const response = await fetch('https://fe-y-conocimiento-2.onrender.com/api/registro', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
