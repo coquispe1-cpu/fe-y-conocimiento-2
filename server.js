@@ -8,7 +8,7 @@ app.use(express.json());
 app.use(cors());
 
 // **IMPORTANTE**: Reemplaza esta URL con la que obtuviste de Google Apps Script.
-const googleAppsScriptUrl = 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE'; 
+const googleAppsScriptUrl = 'https://script.google.com/macros/s/AKfycbw2DDuzzG1SWPy_-Z0owjhFdsOJS5GgirdvBCiW9fKfXfrtLbfCncBiE6SHLOka6OnZ/exec'; 
 
 app.post('/api/registro', async (req, res) => {
     const nuevoUsuario = req.body;
