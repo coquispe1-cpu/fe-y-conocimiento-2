@@ -1,4 +1,3 @@
-// Final fix to force a new deployment on Render.
 const express = require('express');
 const cors = require('cors');
 const fetch = require('node-fetch');
