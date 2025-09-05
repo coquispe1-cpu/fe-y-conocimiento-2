@@ -1,13 +1,14 @@
 {
-  "name": "fe-y-conocimiento",
+  "name": "fe-y-conocimiento-2",
   "version": "1.0.0",
-  "description": "Aplicación de registro y cuestionario con backend",
+  "description": "Servidor de backend para el formulario de registro.",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
-    "express": "^4.19.2"
+    "express": "^4.19.2",
+    "node-fetch": "^2.6.1"
   }
 }
