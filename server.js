@@ -1,3 +1,4 @@
+// Archivo de servidor corregido para asegurar el despliegue en Render.
 const express = require('express');
 const cors = require('cors');
 const fetch = require('node-fetch');
