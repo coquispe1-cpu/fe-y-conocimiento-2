@@ -1,4 +1,3 @@
-// Archivo de servidor corregido para asegurar el despliegue en Render.
 const express = require('express');
 const cors = require('cors');
 const fetch = require('node-fetch');
@@ -13,35 +12,29 @@ app.use(cors());
 const googleAppsScriptUrl = 'https://script.google.com/macros/s/AKfycbw2DDuzzG1SWPy_-Z0owjhFdsOJS5GgirdvBCiW9fKfXfrtLbfCncBiE6SHLOka6OnZ/exec';
 
 app.post('/api/registro', async (req, res) => {
-    const { nombre, email, celular, edad, lugar_residencia, pais_procedencia } = req.body;
-
-    // Crear un objeto con los datos del formulario.
-    const formData = {
-        Nombre: nombre,
-        Email: email,
-        Celular: celular,
-        Edad: edad,
-        'Lugar de residencia': lugar_residencia,
-        'País de procedencia': pais_procedencia
-    };
+    const nuevoUsuario = req.body;
+    
+    console.log('Datos de nuevo usuario recibidos:', nuevoUsuario);
 
     try {
         const response = await fetch(googleAppsScriptUrl, {
             method: 'POST',
-            body: JSON.stringify(formData),
+            body: JSON.stringify(nuevoUsuario),
             headers: {
-                'Content-Type': 'application/json',
-            },
+                'Content-Type': 'application/json'
+            }
         });
 
-        const result = await response.json();
+        if (!response.ok) {
+            throw new Error(`Error en la solicitud a Google Apps Script: ${response.statusText}`);
+        }
 
-        // Enviar una respuesta de éxito al cliente
-        res.status(200).json({ mensaje: 'Usuario registrado exitosamente', datos: result });
-        
+        const data = await response.json();
+        res.status(200).json(data);
+
     } catch (error) {
         console.error('Error al enviar los datos a Google Apps Script:', error);
-        res.status(500).json({ mensaje: 'Error al registrar el usuario', error: error.message });
+        res.status(500).json({ error: 'Hubo un error en el registro.' });
     }
 });
 
