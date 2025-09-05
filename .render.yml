@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: fe-y-conocimiento
+    env: node
+    buildCommand: "npm install"
+    startCommand: "node server.js"
