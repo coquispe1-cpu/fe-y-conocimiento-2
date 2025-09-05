@@ -4,30 +4,115 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registro de Usuario</title>
-    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #1f4068, #162447);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            color: #f0f0f0;
+        }
+        
+        .form-container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 450px;
+            text-align: center;
+            animation: fadeIn 1s ease-in-out;
+        }
+        
+        h1 {
+            color: #162447;
+            margin-bottom: 25px;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        }
+        
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        label {
+            text-align: left;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 600;
+        }
+        
+        input {
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        
+        input:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+            outline: none;
+        }
+        
+        button {
+            background: #e43f5a;
+            color: white;
+            padding: 15px;
+            border: none;
+            border-radius: 6px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s, box-shadow 0.3s;
+        }
+        
+        button:hover {
+            background: #c6283d;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="form-container">
         <h1>Registro de Usuario</h1>
         <form id="registro-form">
             <label for="nombre">Nombre:</label>
-            <input type="text" id="nombre" required>
-            
+            <input type="text" id="nombre" name="nombre" required>
+
             <label for="email">Email:</label>
-            <email type="email" id="email" required>
-            
+            <input type="email" id="email" name="email" required>
+
             <label for="celular">Celular:</label>
-            <input type="tel" id="celular" required>
-            
+            <input type="tel" id="celular" name="celular">
+
             <label for="edad">Edad:</label>
-            <input type="number" id="edad" required>
-            
-            <label for="pais">País:</label>
-            <input type="text" id="pais" required>
-            
-            <label for="ciudad">Ciudad:</label>
-            <input type="text" id="ciudad" required>
-            
+            <input type="number" id="edad" name="edad">
+
+            <label for="residencia">Lugar de residencia:</label>
+            <input type="text" id="residencia" name="residencia">
+
+            <label for="procedencia">País de procedencia:</label>
+            <input type="text" id="procedencia" name="procedencia">
+
             <button type="submit">Registrar</button>
         </form>
     </div>
