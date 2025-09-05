@@ -1,48 +1,36 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const registroForm = document.getElementById('registro-form');
+    const form = document.getElementById('registro-form');
 
-    registroForm.addEventListener('submit', async (e) => {
+    form.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        const nombre = document.getElementById('nombre').value;
-        const email = document.getElementById('email').value;
-        const celular = document.getElementById('celular').value;
-        const edad = document.getElementById('edad').value;
-        const pais = document.getElementById('pais').value;
-        const ciudad = document.getElementById('ciudad').value;
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
 
-        const nuevoUsuario = {
-            nombre,
-            email,
-            celular,
-            edad,
-            pais,
-            ciudad
-        };
-
-        // URL del servidor de Render
-        const urlBackend = 'https://fe-y-conocimiento-2.onrender.com/api/registro';
+        // **IMPORTANTE**: Reemplaza esta URL con la URL de tu servicio en Render.
+        const serverURL = 'https://fe-y-conocimiento-2.onrender.com/api/registro';
 
         try {
-            const respuesta = await fetch(urlBackend, {
+            const response = await fetch(serverURL, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(nuevoUsuario)
+                body: JSON.stringify(data),
             });
 
-            if (!respuesta.ok) {
-                throw new Error(`Error HTTP: ${respuesta.status}`);
+            const result = await response.json();
+
+            if (response.ok) {
+                alert('¡Registro exitoso!');
+                form.reset();
+            } else {
+                alert('Hubo un error en el registro: ' + result.error);
             }
 
-            const data = await respuesta.json();
-            console.log('Respuesta del servidor:', data);
-            alert('¡Usuario registrado exitosamente!');
-
         } catch (error) {
-            console.error('Error al enviar el formulario:', error);
-            alert('Error al registrar usuario. Intenta de nuevo.');
+            console.error('Error al enviar los datos:', error);
+            alert('Error al conectar con el servidor. Por favor, inténtalo de nuevo.');
         }
     });
 });
