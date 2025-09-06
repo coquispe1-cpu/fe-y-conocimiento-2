@@ -109,6 +109,12 @@
             color: #721c24;
             border: 1px solid #f5c6cb;
         }
+
+        .loading {
+            background-color: #e9f2fb;
+            color: #1f4068;
+            border: 1px solid #bedbf7;
+        }
     </style>
 </head>
 <body>
@@ -145,7 +151,6 @@
             const registerButton = document.getElementById('register-button');
 
             // URL del servidor de Render
-            // La URL ha sido corregida para apuntar a la ruta correcta en el servidor de Render
             const urlBackend = 'https://fe-y-conocimiento-2.onrender.com/api/registro';
 
             registroForm.addEventListener('submit', async (e) => {
@@ -153,7 +158,9 @@
 
                 // Ocultar mensaje y deshabilitar botón mientras se procesa
                 if (messageContainer) {
-                    messageContainer.style.display = 'none';
+                    messageContainer.style.display = 'block';
+                    messageContainer.textContent = 'Conectando con el servidor...';
+                    messageContainer.className = 'loading';
                 }
                 if (registerButton) {
                     registerButton.disabled = true;
@@ -191,7 +198,6 @@
                         if (messageContainer) {
                             messageContainer.textContent = '¡Usuario registrado exitosamente!';
                             messageContainer.className = 'success';
-                            messageContainer.style.display = 'block';
                         }
                         registroForm.reset();
                     } else {
@@ -199,7 +205,6 @@
                         if (messageContainer) {
                             messageContainer.textContent = `Error al registrar usuario: ${data.error || 'Intenta de nuevo.'}`;
                             messageContainer.className = 'error';
-                            messageContainer.style.display = 'block';
                         }
                     }
 
@@ -208,7 +213,6 @@
                     if (messageContainer) {
                         messageContainer.textContent = 'Error al conectar con el servidor. Por favor, inténtalo de nuevo.';
                         messageContainer.className = 'error';
-                        messageContainer.style.display = 'block';
                     }
                     console.error('Error al enviar el formulario:', error);
                 } finally {
