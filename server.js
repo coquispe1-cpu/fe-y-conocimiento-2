@@ -1,43 +1,48 @@
 const express = require('express');
+const bodyParser = require('body-parser');
 const cors = require('cors');
 const fetch = require('node-fetch');
 
 const app = express();
-const PORT = process.env.PORT || 10000;
+const port = process.env.PORT || 3000;
 
-app.use(express.json());
+// Configuración de middlewares
+app.use(bodyParser.json());
 app.use(cors());
 
-// **IMPORTANTE**: Reemplaza esta URL con la que obtuviste de Google Apps Script.
+// URL de tu script de Google Apps Script
+// La URL ha sido actualizada con la que has proporcionado.
 const googleAppsScriptUrl = 'https://script.google.com/macros/s/AKfycbw2DDuzzG1SWPy_-Z0owjhFdsOJS5GgirdvBCiW9fKfXfrtLbfCncBiE6SHLOka6OnZ/exec';
 
-app.post('/api/registro', async (req, res) => {
-    const nuevoUsuario = req.body;
-    
-    console.log('Datos de nuevo usuario recibidos:', nuevoUsuario);
-
+// Ruta para recibir los datos del formulario
+app.post('/submit-form', async (req, res) => {
     try {
-        const response = await fetch(googleAppsScriptUrl, {
+        const formData = req.body;
+        console.log('Datos recibidos del formulario:', formData);
+
+        // Enviar los datos al script de Google Apps Script
+        const scriptResponse = await fetch(googleAppsScriptUrl, {
             method: 'POST',
-            body: JSON.stringify(nuevoUsuario),
             headers: {
-                'Content-Type': 'application/json'
-            }
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData),
         });
 
-        if (!response.ok) {
-            throw new Error(`Error en la solicitud a Google Apps Script: ${response.statusText}`);
+        // Asegurarse de que la respuesta del script de Google sea JSON válido
+        if (scriptResponse.ok) {
+            const scriptData = await scriptResponse.json();
+            res.json(scriptData);
+        } else {
+            const errorText = await scriptResponse.text();
+            res.status(500).json({ error: 'Error al comunicarse con Google Apps Script: ' + errorText });
         }
-
-        const data = await response.json();
-        res.status(200).json(data);
-
     } catch (error) {
-        console.error('Error al enviar los datos a Google Apps Script:', error);
+        console.error('Error en el servidor:', error);
         res.status(500).json({ error: 'Hubo un error en el registro.' });
     }
 });
 
-app.listen(PORT, () => {
-    console.log(`Servidor escuchando en el puerto ${PORT}`);
+app.listen(port, () => {
+    console.log(`Servidor escuchando en http://localhost:${port}`);
 });
