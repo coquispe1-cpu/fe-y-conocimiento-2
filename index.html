@@ -115,6 +115,25 @@
             color: #1f4068;
             border: 1px solid #bedbf7;
         }
+
+        /* Estilo para el spinner de carga */
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #e43f5a;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
     </style>
 </head>
 <body>
@@ -156,10 +175,10 @@
             registroForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
 
-                // Ocultar mensaje y deshabilitar botón mientras se procesa
+                // Mostrar mensaje de carga y deshabilitar botón
                 if (messageContainer) {
                     messageContainer.style.display = 'block';
-                    messageContainer.textContent = 'Conectando con el servidor...';
+                    messageContainer.innerHTML = 'Conectando con el servidor... <span class="spinner"></span>';
                     messageContainer.className = 'loading';
                 }
                 if (registerButton) {
@@ -196,14 +215,14 @@
                     if (respuesta.ok) {
                         // Mostrar mensaje de éxito
                         if (messageContainer) {
-                            messageContainer.textContent = '¡Usuario registrado exitosamente!';
+                            messageContainer.innerHTML = '¡Usuario registrado exitosamente!';
                             messageContainer.className = 'success';
                         }
                         registroForm.reset();
                     } else {
                         // Mostrar mensaje de error del servidor
                         if (messageContainer) {
-                            messageContainer.textContent = `Error al registrar usuario: ${data.error || 'Intenta de nuevo.'}`;
+                            messageContainer.innerHTML = `Error al registrar usuario: ${data.error || 'Intenta de nuevo.'}`;
                             messageContainer.className = 'error';
                         }
                     }
@@ -211,7 +230,7 @@
                 } catch (error) {
                     // Mostrar mensaje de error de conexión
                     if (messageContainer) {
-                        messageContainer.textContent = 'Error al conectar con el servidor. Por favor, inténtalo de nuevo.';
+                        messageContainer.innerHTML = 'Error al conectar con el servidor. Por favor, inténtalo de nuevo.';
                         messageContainer.className = 'error';
                     }
                     console.error('Error al enviar el formulario:', error);
