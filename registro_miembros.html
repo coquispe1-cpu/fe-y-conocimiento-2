@@ -32,20 +32,26 @@
             </div>
             
             <div>
-                <label for="telefono" class="block text-sm font-medium text-slate-700">Teléfono</label>
-                <input type="tel" id="telefono" name="telefono" placeholder="+52 55 1234 5678" 
-                       class="mt-1 block w-full px-4 py-2 bg-slate-50 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-            </div>
-            
-            <div>
-                <label for="fechaNacimiento" class="block text-sm font-medium text-slate-700">Fecha de Nacimiento</label>
-                <input type="date" id="fechaNacimiento" name="fechaNacimiento" required 
+                <label for="celular" class="block text-sm font-medium text-slate-700">Celular</label>
+                <input type="tel" id="celular" name="celular" placeholder="+52 55 1234 5678" 
                        class="mt-1 block w-full px-4 py-2 bg-slate-50 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
             </div>
 
             <div>
-                <label for="pais" class="block text-sm font-medium text-slate-700">País de Residencia</label>
-                <input type="text" id="pais" name="pais" placeholder="Perú" required 
+                <label for="edad" class="block text-sm font-medium text-slate-700">Edad</label>
+                <input type="number" id="edad" name="edad" placeholder="25" required 
+                       class="mt-1 block w-full px-4 py-2 bg-slate-50 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            
+            <div>
+                <label for="lugarResidencia" class="block text-sm font-medium text-slate-700">Lugar de Residencia</label>
+                <input type="text" id="lugarResidencia" name="lugarResidencia" placeholder="Ciudad de México" required 
+                       class="mt-1 block w-full px-4 py-2 bg-slate-50 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            </div>
+
+            <div>
+                <label for="paisProcedencia" class="block text-sm font-medium text-slate-700">País de Procedencia</label>
+                <input type="text" id="paisProcedencia" name="paisProcedencia" placeholder="Perú" required 
                        class="mt-1 block w-full px-4 py-2 bg-slate-50 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
             </div>
 
@@ -74,9 +80,10 @@
                 const data = {
                     nombre: document.getElementById('nombre').value,
                     email: document.getElementById('email').value,
-                    telefono: document.getElementById('telefono').value,
-                    fechaNacimiento: document.getElementById('fechaNacimiento').value,
-                    pais: document.getElementById('pais').value,
+                    celular: document.getElementById('celular').value,
+                    edad: document.getElementById('edad').value,
+                    lugarResidencia: document.getElementById('lugarResidencia').value,
+                    paisProcedencia: document.getElementById('paisProcedencia').value,
                 };
                 
                 // URL del servidor de Render. **REEMPLAZA ESTA URL CON LA TUYA**
@@ -116,4 +123,4 @@
         });
     </script>
 </body>
-</html>
+<
