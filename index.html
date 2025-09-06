@@ -56,8 +56,8 @@
         }
         
         input:focus {
-            border-color: #007bff;
-            box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+            border-color: #e43f5a;
+            box-shadow: 0 0 5px rgba(228, 63, 90, 0.5);
             outline: none;
         }
         
@@ -78,7 +78,7 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
-        
+
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -133,10 +133,91 @@
             <label for="procedencia">País de procedencia:</label>
             <input type="text" id="procedencia" name="procedencia">
 
-            <button type="submit">Registrar</button>
+            <button type="submit" id="register-button">Registrar</button>
         </form>
         <div id="message-container"></div>
     </div>
-    <script src="main.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const registroForm = document.getElementById('registro-form');
+            const messageContainer = document.getElementById('message-container');
+            const registerButton = document.getElementById('register-button');
+
+            // URL del servidor de Render
+            const urlBackend = 'https://fe-y-conocimiento-2.onrender.com/submit-form';
+
+            registroForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                // Ocultar mensaje y deshabilitar botón mientras se procesa
+                if (messageContainer) {
+                    messageContainer.style.display = 'none';
+                }
+                if (registerButton) {
+                    registerButton.disabled = true;
+                }
+
+                const nombre = document.getElementById('nombre').value;
+                const email = document.getElementById('email').value;
+                const celular = document.getElementById('celular').value;
+                const edad = document.getElementById('edad').value;
+                const residencia = document.getElementById('residencia').value;
+                const procedencia = document.getElementById('procedencia').value;
+
+                const nuevoUsuario = {
+                    nombre,
+                    email,
+                    celular,
+                    edad,
+                    residencia,
+                    procedencia
+                };
+
+                try {
+                    const respuesta = await fetch(urlBackend, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(nuevoUsuario)
+                    });
+
+                    const data = await respuesta.json();
+
+                    if (respuesta.ok) {
+                        // Mostrar mensaje de éxito
+                        if (messageContainer) {
+                            messageContainer.textContent = '¡Usuario registrado exitosamente!';
+                            messageContainer.className = 'success';
+                            messageContainer.style.display = 'block';
+                        }
+                        registroForm.reset();
+                    } else {
+                        // Mostrar mensaje de error del servidor
+                        if (messageContainer) {
+                            messageContainer.textContent = `Error al registrar usuario: ${data.error || 'Intenta de nuevo.'}`;
+                            messageContainer.className = 'error';
+                            messageContainer.style.display = 'block';
+                        }
+                    }
+
+                } catch (error) {
+                    // Mostrar mensaje de error de conexión
+                    if (messageContainer) {
+                        messageContainer.textContent = 'Error al conectar con el servidor. Por favor, inténtalo de nuevo.';
+                        messageContainer.className = 'error';
+                        messageContainer.style.display = 'block';
+                    }
+                    console.error('Error al enviar el formulario:', error);
+                } finally {
+                    // Volver a habilitar el botón
+                    if (registerButton) {
+                        registerButton.disabled = false;
+                    }
+                }
+            });
+        });
+    </script>
 </body>
 </html>
