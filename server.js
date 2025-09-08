@@ -35,12 +35,8 @@ app.post('/api/registro', async (req, res) => {
     
     // Reenviar los datos a Google Apps Script
     // Usamos axios para enviar una solicitud POST
-    // Enviamos los datos en formato URL-encoded para que Google Apps Script los pueda leer fácilmente
-    const response = await axios.post(googleAppsScriptUrl, formData, {
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      }
-    });
+    // Axios enviará los datos en formato JSON, que es lo que el script de Google espera
+    const response = await axios.post(googleAppsScriptUrl, formData);
 
     // Google Apps Script devuelve un objeto JSON en la respuesta.
     // Lo enviamos de vuelta al cliente (el formulario web).
