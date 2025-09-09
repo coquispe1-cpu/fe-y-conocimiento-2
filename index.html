@@ -23,21 +23,29 @@
 
         let db, auth;
         if (firebaseConfig) {
-            const app = initializeApp(firebaseConfig);
-            db = getFirestore(app);
-            auth = getAuth(app);
-            
-            if (initialAuthToken) {
-                signInWithCustomToken(auth, initialAuthToken).catch((error) => {
-                    console.error("Error signing in with custom token:", error);
-                });
-            } else {
-                signInAnonymously(auth).catch((error) => {
-                    console.error("Error signing in anonymously:", error);
-                });
+            try {
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                
+                if (initialAuthToken) {
+                    signInWithCustomToken(auth, initialAuthToken).catch((error) => {
+                        console.error("Error al iniciar sesión con token personalizado:", error);
+                    });
+                } else {
+                    signInAnonymously(auth).catch((error) => {
+                        console.error("Error al iniciar sesión de forma anónima:", error);
+                    });
+                }
+            } catch (error) {
+                console.error("Error al inicializar Firebase:", error);
+                const messageContainer = document.getElementById('message-container');
+                messageContainer.style.display = 'block';
+                messageContainer.textContent = 'Error: No se pudo conectar a Firebase. Revisa tu configuración.';
+                messageContainer.className = 'bg-red-100 text-red-800 border border-red-200 p-3 rounded-lg font-bold text-center';
             }
         } else {
-            console.error("Firebase config is not defined. The app will not be able to save or load data.");
+            console.error("La configuración de Firebase no está definida. La aplicación no podrá guardar ni cargar datos.");
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -48,56 +56,60 @@
             const userList = document.getElementById('user-list');
             const userListContainer = document.getElementById('user-list-container');
             const userIdDisplay = document.getElementById('user-id');
+            const loadingStatus = document.getElementById('loading-status');
 
-            // Ocultar el título de bienvenida y la lista de usuarios al inicio
+            // Ocultar el título de bienvenida al inicio y mostrar el estado de carga
             welcomeTitle.classList.add('hidden');
-            userListContainer.classList.add('hidden');
+            loadingStatus.classList.remove('hidden');
 
             // Función para mostrar los usuarios en la página desde Firestore
             const displayUsers = (registros) => {
                 userList.innerHTML = '';
                 if (registros.length === 0) {
                     userList.innerHTML = '<p class="text-center text-gray-500">Aún no hay usuarios registrados.</p>';
-                    return;
-                }
-                registros.forEach((user) => {
-                    const userCard = document.createElement('div');
-                    userCard.className = 'bg-gray-100 p-4 rounded-lg shadow-sm flex justify-between items-start';
-                    userCard.innerHTML = `
-                        <div>
-                            <p class="text-sm text-gray-600"><strong>Nombre:</strong> ${user.nombre}</p>
-                            <p class="text-sm text-gray-600"><strong>Email:</strong> ${user.email}</p>
-                            <p class="text-sm text-gray-600"><strong>Celular:</strong> ${user.celular || 'N/A'}</p>
-                            <p class="text-sm text-gray-600"><strong>Edad:</strong> ${user.edad || 'N/A'}</p>
-                            <p class="text-sm text-gray-600"><strong>Residencia:</strong> ${user.residencia || 'N/A'}</p>
-                            <p class="text-sm text-gray-600"><strong>Procedencia:</strong> ${user.procedencia || 'N/A'}</p>
-                            <p class="text-sm text-gray-600"><strong>Tiempo como creyente:</strong> ${user.tiempo_creyente || 'N/A'}</p>
-                            <p class="text-sm text-gray-600"><strong>Bautizado en agua:</strong> ${user.bautizado_agua || 'N/A'}</p>
-                            <p class="text-sm text-gray-600"><strong>Bautismo del Espíritu Santo:</strong> ${user.bautismo_espiritu_santo || 'N/A'}</p>
-                        </div>
-                        <!-- Botón para eliminar el registro -->
-                        <button class="delete-button bg-red-500 text-white font-bold py-1 px-3 rounded-lg hover:bg-red-600 transition-colors" data-id="${user.id}">Eliminar</button>
-                    `;
-                    userList.appendChild(userCard);
-                });
-
-                // Añadir un listener al botón de eliminar para cada usuario
-                document.querySelectorAll('.delete-button').forEach(button => {
-                    button.addEventListener('click', async (e) => {
-                        const docId = e.target.dataset.id;
-                        const collectionPath = `artifacts/${appId}/public/data/registros`;
-                        try {
-                            await deleteDoc(doc(db, collectionPath, docId));
-                            console.log("Documento eliminado con éxito:", docId);
-                        } catch (error) {
-                            console.error("Error al eliminar el documento:", error);
-                        }
+                } else {
+                    registros.forEach((user) => {
+                        const userCard = document.createElement('div');
+                        userCard.className = 'bg-gray-100 p-4 rounded-lg shadow-sm flex justify-between items-start';
+                        userCard.innerHTML = `
+                            <div>
+                                <p class="text-sm text-gray-600"><strong>Nombre:</strong> ${user.nombre}</p>
+                                <p class="text-sm text-gray-600"><strong>Email:</strong> ${user.email}</p>
+                                <p class="text-sm text-gray-600"><strong>Celular:</strong> ${user.celular || 'N/A'}</p>
+                                <p class="text-sm text-gray-600"><strong>Edad:</strong> ${user.edad || 'N/A'}</p>
+                                <p class="text-sm text-gray-600"><strong>Residencia:</strong> ${user.residencia || 'N/A'}</p>
+                                <p class="text-sm text-gray-600"><strong>Procedencia:</strong> ${user.procedencia || 'N/A'}</p>
+                                <p class="text-sm text-gray-600"><strong>Tiempo como creyente:</strong> ${user.tiempo_creyente || 'N/A'}</p>
+                                <p class="text-sm text-gray-600"><strong>Bautizado en agua:</strong> ${user.bautizado_agua || 'N/A'}</p>
+                                <p class="text-sm text-gray-600"><strong>Bautismo del Espíritu Santo:</strong> ${user.bautismo_espiritu_santo || 'N/A'}</p>
+                            </div>
+                            <!-- Botón para eliminar el registro -->
+                            <button class="delete-button bg-red-500 text-white font-bold py-1 px-3 rounded-lg hover:bg-red-600 transition-colors" data-id="${user.id}">Eliminar</button>
+                        `;
+                        userList.appendChild(userCard);
                     });
-                });
+
+                    // Añadir un listener al botón de eliminar para cada usuario
+                    document.querySelectorAll('.delete-button').forEach(button => {
+                        button.addEventListener('click', async (e) => {
+                            const docId = e.target.dataset.id;
+                            const collectionPath = `artifacts/${appId}/public/data/registros`;
+                            try {
+                                await deleteDoc(doc(db, collectionPath, docId));
+                                console.log("Documento eliminado con éxito:", docId);
+                            } catch (error) {
+                                console.error("Error al eliminar el documento:", error);
+                            }
+                        });
+                    });
+                }
             };
 
             // Escuchando los cambios de autenticación
             onAuthStateChanged(auth, (user) => {
+                loadingStatus.classList.add('hidden'); // Ocultar el mensaje de carga una vez que se resuelve la autenticación
+                userListContainer.classList.remove('hidden'); // Mostrar el contenedor de la lista
+
                 if (user) {
                     userIdDisplay.textContent = `ID de Usuario: ${user.uid}`;
                     console.log("Usuario autenticado con ID:", user.uid);
@@ -112,16 +124,14 @@
                             registros.push({ id: doc.id, ...doc.data() });
                         });
                         displayUsers(registros);
-                        userListContainer.classList.remove('hidden');
                     }, (error) => {
                         console.error("Error al escuchar los registros:", error);
-                        userListContainer.classList.add('hidden');
+                        userList.innerHTML = '<p class="text-center text-red-500">Error al cargar los registros.</p>';
                     });
                 } else {
                     userIdDisplay.textContent = "No autenticado";
                     console.log("Usuario no autenticado.");
                     userList.innerHTML = '<p class="text-center text-gray-500">Necesitas autenticarte para ver los registros.</p>';
-                    userListContainer.classList.add('hidden');
                 }
             });
 
@@ -228,6 +238,7 @@
         <div id="message-container" class="mt-4 p-4 rounded-lg text-center hidden"></div>
         <div id="user-list-container" class="mt-8">
             <h2 id="welcome-title" class="text-2xl font-bold text-blue-600 text-center mb-4 bg-green-100 p-2 rounded-lg">Bienvenido</h2>
+            <div id="loading-status" class="text-center text-gray-500">Cargando registros...</div>
             <div id="user-list" class="space-y-4">
                 <!-- Los usuarios se mostrarán aquí -->
             </div>
