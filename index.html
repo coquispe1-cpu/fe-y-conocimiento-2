@@ -43,9 +43,15 @@
         document.addEventListener('DOMContentLoaded', () => {
             const form = document.getElementById('registro-form');
             const messageContainer = document.getElementById('message-container');
+            const welcomeTitle = document.getElementById('welcome-title');
             const registerButton = document.getElementById('register-button');
             const userList = document.getElementById('user-list');
+            const userListContainer = document.getElementById('user-list-container');
             const userIdDisplay = document.getElementById('user-id');
+
+            // Ocultar el título de bienvenida y la lista de usuarios al inicio
+            welcomeTitle.classList.add('hidden');
+            userListContainer.classList.add('hidden');
 
             // Función para mostrar los usuarios en la página desde Firestore
             const displayUsers = (registros) => {
@@ -106,19 +112,25 @@
                             registros.push({ id: doc.id, ...doc.data() });
                         });
                         displayUsers(registros);
+                        userListContainer.classList.remove('hidden');
                     }, (error) => {
                         console.error("Error al escuchar los registros:", error);
+                        userListContainer.classList.add('hidden');
                     });
                 } else {
                     userIdDisplay.textContent = "No autenticado";
                     console.log("Usuario no autenticado.");
                     userList.innerHTML = '<p class="text-center text-gray-500">Necesitas autenticarte para ver los registros.</p>';
+                    userListContainer.classList.add('hidden');
                 }
             });
 
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
 
+                // Ocultar el título de bienvenida al enviar el formulario
+                welcomeTitle.classList.add('hidden');
+                
                 messageContainer.style.display = 'block';
                 messageContainer.textContent = 'Enviando datos...';
                 messageContainer.className = 'bg-blue-100 text-blue-800 border border-blue-200 p-3 rounded-lg font-bold text-center';
@@ -137,7 +149,10 @@
                 const collectionPath = `artifacts/${appId}/public/data/registros`;
                 try {
                     await addDoc(collection(db, collectionPath), data);
-                    messageContainer.textContent = '¡Usuario registrado exitosamente!';
+                    
+                    // Mostrar el título de bienvenida y el mensaje de éxito
+                    welcomeTitle.classList.remove('hidden');
+                    messageContainer.textContent = '¡Registro exitoso!';
                     messageContainer.className = 'bg-green-100 text-green-800 border border-green-200 p-3 rounded-lg font-bold text-center';
                     form.reset();
                 } catch (error) {
@@ -212,7 +227,7 @@
         </form>
         <div id="message-container" class="mt-4 p-4 rounded-lg text-center hidden"></div>
         <div id="user-list-container" class="mt-8">
-            <h2 class="text-2xl font-bold text-gray-800 text-center mb-4">Usuarios Registrados</h2>
+            <h2 id="welcome-title" class="text-2xl font-bold text-blue-600 text-center mb-4 bg-green-100 p-2 rounded-lg">Bienvenido</h2>
             <div id="user-list" class="space-y-4">
                 <!-- Los usuarios se mostrarán aquí -->
             </div>
