@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registro de Usuario</title>
+    <title>Registro de Usuario Local</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -20,243 +20,12 @@
             pointer-events: none;
         }
     </style>
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, doc, deleteDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        setLogLevel('Debug');
-
-        // Variables globales proporcionadas por el entorno de Canvas
-        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : null);
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-
-        let db, auth;
-        let allUsers = []; // Cache de todos los usuarios
-        let isAuthReady = false;
-        
-        if (firebaseConfig) {
-            try {
-                const app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
-                
-                onAuthStateChanged(auth, (user) => {
-                    if (user) {
-                        console.log("Usuario autenticado con ID:", user.uid);
-                        isAuthReady = true;
-                        document.getElementById('user-id').textContent = `ID de Usuario: ${user.uid}`;
-                        
-                        // Carga los datos una vez que el usuario está autenticado
-                        const collectionPath = `artifacts/${appId}/public/data/registros`;
-                        const q = query(collection(db, collectionPath));
-                        
-                        onSnapshot(q, (querySnapshot) => {
-                            document.getElementById('loading-status').classList.add('hidden');
-                            document.getElementById('welcome-title').classList.remove('hidden');
-                            
-                            allUsers = [];
-                            const procedenciaOptions = new Set(['todos']);
-                            
-                            if (!querySnapshot.empty) {
-                                querySnapshot.forEach(doc => {
-                                    allUsers.push(doc);
-                                    const procedencia = doc.data().procedencia;
-                                    if (procedencia) {
-                                        procedenciaOptions.add(procedencia);
-                                    }
-                                });
-                            }
-
-                            const filterSelect = document.getElementById('filter-select');
-                            filterSelect.innerHTML = '';
-                            procedenciaOptions.forEach(option => {
-                                const optionElement = document.createElement('option');
-                                optionElement.value = option;
-                                optionElement.textContent = option.charAt(0).toUpperCase() + option.slice(1);
-                                filterSelect.appendChild(optionElement);
-                            });
-
-                            filterUsers(); // Renderiza la lista inicial y aplica cualquier filtro preexistente
-                        }, (error) => {
-                            const loadingStatus = document.getElementById('loading-status');
-                            loadingStatus.textContent = 'Error al cargar los registros: ' + error.message;
-                            loadingStatus.className = 'text-center text-red-600 font-bold';
-                            console.error("Error en onSnapshot:", error);
-                        });
-                        
-                    } else {
-                        isAuthReady = false;
-                        document.getElementById('user-id').textContent = "ID de Usuario: No autenticado";
-                        document.getElementById('loading-status').classList.remove('hidden');
-                        document.getElementById('loading-status').textContent = 'Iniciando sesión anónima...';
-                        console.log("Usuario no autenticado. Iniciando sesión anónima.");
-                    }
-                });
-
-                // Inicia el proceso de autenticación inmediatamente
-                if (initialAuthToken) {
-                    signInWithCustomToken(auth, initialAuthToken).catch((error) => {
-                        console.error("Error al iniciar sesión con token personalizado. Intentando con sesión anónima.", error);
-                        signInAnonymously(auth);
-                    });
-                } else {
-                    signInAnonymously(auth).catch((error) => {
-                        console.error("Error al iniciar sesión de forma anónima:", error);
-                        const loadingStatus = document.getElementById('loading-status');
-                        loadingStatus.textContent = 'Error de autenticación: ' + error.message;
-                        loadingStatus.className = 'text-center text-red-600 font-bold';
-                    });
-                }
-                
-            } catch (error) {
-                console.error("Error al inicializar Firebase:", error);
-                const loadingStatus = document.getElementById('loading-status');
-                loadingStatus.textContent = 'Error al inicializar la base de datos: ' + error.message;
-                loadingStatus.className = 'text-center text-red-600 font-bold';
-            }
-        } else {
-            console.error("La configuración de Firebase no está definida. La aplicación no podrá guardar datos.");
-            const loadingStatus = document.getElementById('loading-status');
-            loadingStatus.textContent = 'Error: La configuración de la base de datos no está disponible.';
-            loadingStatus.className = 'text-center text-red-600 font-bold';
-        }
-
-        // Función para renderizar la lista de usuarios
-        function renderUserList(usersToDisplay) {
-            const userList = document.getElementById('user-list');
-            userList.innerHTML = '';
-            
-            if (usersToDisplay.length === 0) {
-                userList.innerHTML = '<p class="text-center text-gray-500">No se encontraron usuarios que coincidan con la búsqueda.</p>';
-                return;
-            }
-
-            usersToDisplay.forEach((doc) => {
-                const userData = doc.data();
-                const userCard = document.createElement('div');
-                userCard.className = 'bg-gray-100 p-4 rounded-lg shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center';
-                userCard.innerHTML = `
-                    <div class="mb-2 sm:mb-0">
-                        <p class="text-sm text-gray-800 font-bold">Nombre: ${userData.nombre}</p>
-                        <p class="text-xs text-gray-600">Email: ${userData.email}</p>
-                        <p class="text-xs text-gray-600">Celular: ${userData.celular || 'N/A'}</p>
-                        <p class="text-xs text-gray-600">Edad: ${userData.edad || 'N/A'}</p>
-                        <p class="text-xs text-gray-600">Residencia: ${userData.residencia || 'N/A'}</p>
-                        <p class="text-xs text-gray-600">Procedencia: ${userData.procedencia || 'N/A'}</p>
-                        <p class="text-xs text-gray-600">Tiempo como creyente: ${userData.tiempo_creyente || 'N/A'}</p>
-                        <p class="text-xs text-gray-600">Bautizado en agua: ${userData.bautizado_agua || 'N/A'}</p>
-                        <p class="text-xs text-gray-600">Bautismo del Espíritu Santo: ${userData.bautismo_espiritu_santo || 'N/A'}</p>
-                    </div>
-                    <button class="delete-button bg-red-500 text-white text-xs font-bold py-1 px-3 rounded-lg hover:bg-red-600 transition-colors mt-2 sm:mt-0" data-id="${doc.id}">Eliminar</button>
-                `;
-                userList.appendChild(userCard);
-            });
-
-            document.querySelectorAll('.delete-button').forEach(button => {
-                button.addEventListener('click', async (e) => {
-                    if (!db || !isAuthReady) {
-                        showModal('Error: No se puede conectar a la base de datos o el usuario no está autenticado.');
-                        return;
-                    }
-                    const docId = e.target.dataset.id;
-                    const path = `artifacts/${appId}/public/data/registros/${docId}`;
-                    try {
-                        await deleteDoc(doc(db, path));
-                        console.log("Documento eliminado con éxito:", docId);
-                        showModal('Registro eliminado con éxito.');
-                    } catch (error) {
-                        console.error("Error al eliminar el documento:", error);
-                        showModal('Error al eliminar el registro.');
-                    }
-                });
-            });
-        }
-
-        // Función para filtrar los usuarios
-        function filterUsers() {
-            const searchQuery = document.getElementById('search-input').value.toLowerCase();
-            const filterValue = document.getElementById('filter-select').value;
-            
-            let filteredUsers = allUsers;
-
-            if (searchQuery) {
-                filteredUsers = filteredUsers.filter(userDoc => {
-                    const userData = userDoc.data();
-                    return Object.values(userData).some(value => 
-                        (typeof value === 'string' && value.toLowerCase().includes(searchQuery))
-                    );
-                });
-            }
-
-            if (filterValue !== 'todos') {
-                filteredUsers = filteredUsers.filter(userDoc => {
-                    const userData = userDoc.data();
-                    return userData.procedencia === filterValue;
-                });
-            }
-
-            renderUserList(filteredUsers);
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const form = document.getElementById('registro-form');
-            const registerButton = document.getElementById('register-button');
-            const modal = document.getElementById('myModal');
-            const closeModalButton = document.querySelector('.close-button');
-            const modalMessage = document.getElementById('modalMessage');
-
-            // Event listeners para la búsqueda y el filtro
-            document.getElementById('search-input').addEventListener('input', filterUsers);
-            document.getElementById('filter-select').addEventListener('change', filterUsers);
-
-            // Función para mostrar un mensaje en un modal
-            function showModal(message) {
-                modalMessage.textContent = message;
-                modal.classList.remove('hidden');
-            }
-
-            // Cerrar el modal
-            closeModalButton.onclick = () => modal.classList.add('hidden');
-            window.onclick = (event) => {
-                if (event.target === modal) {
-                    modal.classList.add('hidden');
-                }
-            }
-            
-            form.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                
-                if (!db || !auth.currentUser) {
-                    showModal('Error: No se puede conectar a la base de datos o el usuario no está autenticado.');
-                    return;
-                }
-
-                registerButton.disabled = true;
-                const formData = new FormData(form);
-                const data = Object.fromEntries(formData.entries());
-                
-                const collectionPath = `artifacts/${appId}/public/data/registros`;
-                try {
-                    await addDoc(collection(db, collectionPath), data);
-                    showModal('¡Registro exitoso!');
-                    form.reset();
-                } catch (error) {
-                    showModal('Error al registrar: ' + error.message);
-                    console.error('Error al enviar el formulario:', error);
-                } finally {
-                    registerButton.disabled = false;
-                }
-            });
-        });
-    </script>
 </head>
 <body class="bg-slate-900 flex flex-col justify-center items-center min-h-screen p-4">
     <div class="bg-white p-8 md:p-12 rounded-xl shadow-2xl w-full max-w-lg transition-all duration-500 ease-in-out">
         <h1 class="text-3xl md:text-4xl font-extrabold text-center text-gray-900 mb-6">Registro de Usuario</h1>
-        <p id="user-id" class="text-center text-gray-500 mb-4 text-sm font-mono"></p>
-        
+        <p class="text-center text-gray-500 mb-4 text-sm">Esta versión guarda los datos localmente en tu navegador. No se necesita conexión a una base de datos.</p>
+
         <form id="registro-form" class="space-y-4">
             <div>
                 <label for="nombre" class="block text-gray-700 font-medium mb-1">Nombre:</label>
@@ -314,8 +83,7 @@
         </form>
 
         <div class="mt-8 pt-8 border-t border-gray-200">
-            <h2 id="welcome-title" class="text-2xl font-bold text-center text-gray-900 mb-4 hidden">Usuarios Registrados</h2>
-            <div id="loading-status" class="text-center text-gray-500">Cargando registros...</div>
+            <h2 id="welcome-title" class="text-2xl font-bold text-center text-gray-900 mb-4">Usuarios Registrados (Local)</h2>
             
             <!-- Barra de búsqueda y filtro -->
             <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 mb-4">
@@ -344,5 +112,150 @@
             </div>
         </div>
     </div>
+    
+    <script>
+        // Función para mostrar un mensaje en un modal
+        function showModal(message) {
+            const modal = document.getElementById('myModal');
+            const modalMessage = document.getElementById('modalMessage');
+            modalMessage.textContent = message;
+            modal.classList.remove('hidden');
+        }
+
+        // Cerrar el modal
+        document.querySelector('.close-button').onclick = () => {
+            document.getElementById('myModal').classList.add('hidden');
+        };
+        window.onclick = (event) => {
+            if (event.target === document.getElementById('myModal')) {
+                document.getElementById('myModal').classList.add('hidden');
+            }
+        };
+
+        let allUsers = [];
+
+        function saveUser(user) {
+            const users = JSON.parse(localStorage.getItem('users')) || [];
+            users.push(user);
+            localStorage.setItem('users', JSON.stringify(users));
+        }
+
+        function deleteUser(emailToDelete) {
+            let users = JSON.parse(localStorage.getItem('users')) || [];
+            users = users.filter(user => user.email !== emailToDelete);
+            localStorage.setItem('users', JSON.stringify(users));
+            loadUsers();
+        }
+        
+        function loadUsers() {
+            allUsers = JSON.parse(localStorage.getItem('users')) || [];
+            renderUserList(allUsers);
+            updateProcedenciaFilter();
+        }
+
+        function updateProcedenciaFilter() {
+            const procedenciaOptions = new Set(['todos']);
+            allUsers.forEach(user => {
+                if (user.procedencia) {
+                    procedenciaOptions.add(user.procedencia);
+                }
+            });
+            const filterSelect = document.getElementById('filter-select');
+            filterSelect.innerHTML = '';
+            procedenciaOptions.forEach(option => {
+                const optionElement = document.createElement('option');
+                optionElement.value = option;
+                optionElement.textContent = option.charAt(0).toUpperCase() + option.slice(1);
+                filterSelect.appendChild(optionElement);
+            });
+        }
+
+        function renderUserList(usersToDisplay) {
+            const userList = document.getElementById('user-list');
+            userList.innerHTML = '';
+            
+            if (usersToDisplay.length === 0) {
+                userList.innerHTML = '<p class="text-center text-gray-500">No hay usuarios registrados.</p>';
+                return;
+            }
+
+            usersToDisplay.forEach((userData) => {
+                const userCard = document.createElement('div');
+                userCard.className = 'bg-gray-100 p-4 rounded-lg shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center';
+                userCard.innerHTML = `
+                    <div class="mb-2 sm:mb-0">
+                        <p class="text-sm text-gray-800 font-bold">Nombre: ${userData.nombre}</p>
+                        <p class="text-xs text-gray-600">Email: ${userData.email}</p>
+                        <p class="text-xs text-gray-600">Celular: ${userData.celular || 'N/A'}</p>
+                        <p class="text-xs text-gray-600">Edad: ${userData.edad || 'N/A'}</p>
+                        <p class="text-xs text-gray-600">Residencia: ${userData.residencia || 'N/A'}</p>
+                        <p class="text-xs text-gray-600">Procedencia: ${userData.procedencia || 'N/A'}</p>
+                        <p class="text-xs text-gray-600">Tiempo como creyente: ${userData.tiempo_creyente || 'N/A'}</p>
+                        <p class="text-xs text-gray-600">Bautizado en agua: ${userData.bautizado_agua || 'N/A'}</p>
+                        <p class="text-xs text-gray-600">Bautismo del Espíritu Santo: ${userData.bautismo_espiritu_santo || 'N/A'}</p>
+                    </div>
+                    <button class="delete-button bg-red-500 text-white text-xs font-bold py-1 px-3 rounded-lg hover:bg-red-600 transition-colors mt-2 sm:mt-0" data-email="${userData.email}">Eliminar</button>
+                `;
+                userList.appendChild(userCard);
+            });
+
+            document.querySelectorAll('.delete-button').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const emailToDelete = e.target.dataset.email;
+                    if (emailToDelete) {
+                        deleteUser(emailToDelete);
+                        showModal('Registro eliminado con éxito.');
+                    }
+                });
+            });
+        }
+
+        function filterUsers() {
+            const searchQuery = document.getElementById('search-input').value.toLowerCase();
+            const filterValue = document.getElementById('filter-select').value;
+            
+            let filteredUsers = allUsers;
+
+            if (searchQuery) {
+                filteredUsers = filteredUsers.filter(userData => {
+                    return Object.values(userData).some(value => 
+                        (typeof value === 'string' && value.toLowerCase().includes(searchQuery))
+                    );
+                });
+            }
+
+            if (filterValue !== 'todos') {
+                filteredUsers = filteredUsers.filter(userData => {
+                    return userData.procedencia === filterValue;
+                });
+            }
+
+            renderUserList(filteredUsers);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('registro-form');
+            const registerButton = document.getElementById('register-button');
+
+            loadUsers(); // Carga la lista inicial al cargar la página
+
+            document.getElementById('search-input').addEventListener('input', filterUsers);
+            document.getElementById('filter-select').addEventListener('change', filterUsers);
+            
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                registerButton.disabled = true;
+                const formData = new FormData(form);
+                const data = Object.fromEntries(formData.entries());
+                
+                saveUser(data);
+                showModal('¡Registro exitoso!');
+                form.reset();
+                loadUsers();
+                registerButton.disabled = false;
+            });
+        });
+    </script>
 </body>
 </html>
