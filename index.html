@@ -140,9 +140,9 @@
             localStorage.setItem('users', JSON.stringify(users));
         }
 
-        function deleteUser(emailToDelete) {
+        function deleteUser(idToDelete) {
             let users = JSON.parse(localStorage.getItem('users')) || [];
-            users = users.filter(user => user.email !== emailToDelete);
+            users = users.filter(user => user.id !== idToDelete);
             localStorage.setItem('users', JSON.stringify(users));
             loadUsers();
         }
@@ -194,16 +194,16 @@
                         <p class="text-xs text-gray-600">Bautizado en agua: ${userData.bautizado_agua || 'N/A'}</p>
                         <p class="text-xs text-gray-600">Bautismo del Espíritu Santo: ${userData.bautismo_espiritu_santo || 'N/A'}</p>
                     </div>
-                    <button class="delete-button bg-red-500 text-white text-xs font-bold py-1 px-3 rounded-lg hover:bg-red-600 transition-colors mt-2 sm:mt-0" data-email="${userData.email}">Eliminar</button>
+                    <button class="delete-button bg-red-500 text-white text-xs font-bold py-1 px-3 rounded-lg hover:bg-red-600 transition-colors mt-2 sm:mt-0" data-id="${userData.id}">Eliminar</button>
                 `;
                 userList.appendChild(userCard);
             });
 
             document.querySelectorAll('.delete-button').forEach(button => {
                 button.addEventListener('click', (e) => {
-                    const emailToDelete = e.target.dataset.email;
-                    if (emailToDelete) {
-                        deleteUser(emailToDelete);
+                    const idToDelete = e.target.dataset.id;
+                    if (idToDelete) {
+                        deleteUser(idToDelete);
                         showModal('Registro eliminado con éxito.');
                     }
                 });
@@ -248,6 +248,7 @@
                 registerButton.disabled = true;
                 const formData = new FormData(form);
                 const data = Object.fromEntries(formData.entries());
+                data.id = Date.now().toString(); // Asigna un ID único
                 
                 saveUser(data);
                 showModal('¡Registro exitoso!');
