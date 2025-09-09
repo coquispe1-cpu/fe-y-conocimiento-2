@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registro de Usuario</title>
     <style>
+        /* Estilos generales para el cuerpo de la página
+         * Usamos un degradado para el fondo y una fuente limpia
+         */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
         body {
             font-family: 'Inter', sans-serif;
             background: linear-gradient(135deg, #1f4068, #162447);
@@ -15,7 +20,10 @@
             margin: 0;
             color: #f0f0f0;
         }
-        
+
+        /* Contenedor principal del formulario
+         * Le damos un fondo blanco, esquinas redondeadas y una sombra para que se destaque
+         */
         .form-container {
             background-color: #ffffff;
             padding: 30px;
@@ -26,26 +34,29 @@
             text-align: center;
             animation: fadeIn 1s ease-in-out;
         }
-        
+
         h1 {
             color: #162447;
             margin-bottom: 25px;
             font-weight: bold;
             text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
         }
-        
+
+        /* Estilos del formulario */
         form {
             display: flex;
             flex-direction: column;
         }
-        
+
+        /* Estilos de las etiquetas de los campos */
         label {
             text-align: left;
             margin-bottom: 5px;
             color: #555;
             font-weight: 600;
         }
-        
+
+        /* Estilos de los campos de entrada de texto y email */
         input {
             padding: 12px;
             margin-bottom: 20px;
@@ -54,13 +65,15 @@
             font-size: 16px;
             transition: border-color 0.3s, box-shadow 0.3s;
         }
-        
+
+        /* Efecto cuando el usuario hace clic en el campo de entrada */
         input:focus {
             border-color: #e43f5a;
             box-shadow: 0 0 5px rgba(228, 63, 90, 0.5);
             outline: none;
         }
-        
+
+        /* Estilos del botón */
         button {
             background: #e43f5a;
             color: white;
@@ -72,13 +85,15 @@
             cursor: pointer;
             transition: background 0.3s, transform 0.2s, box-shadow 0.3s;
         }
-        
+
+        /* Efecto al pasar el cursor sobre el botón */
         button:hover {
             background: #c6283d;
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
 
+        /* Animación para que el formulario aparezca suavemente al cargar la página */
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -90,6 +105,7 @@
             }
         }
 
+        /* Contenedor de mensajes de feedback */
         #message-container {
             margin-top: 20px;
             padding: 15px;
@@ -185,21 +201,8 @@
                     registerButton.disabled = true;
                 }
 
-                const nombre = document.getElementById('nombre').value;
-                const email = document.getElementById('email').value;
-                const celular = document.getElementById('celular').value;
-                const edad = document.getElementById('edad').value;
-                const residencia = document.getElementById('residencia').value;
-                const procedencia = document.getElementById('procedencia').value;
-
-                const nuevoUsuario = {
-                    nombre,
-                    email,
-                    celular,
-                    edad,
-                    residencia,
-                    procedencia
-                };
+                const formData = new FormData(registroForm);
+                const nuevoUsuario = Object.fromEntries(formData.entries());
 
                 try {
                     const respuesta = await fetch(urlBackend, {
@@ -244,4 +247,4 @@
         });
     </script>
 </body>
-</html>
+</html
