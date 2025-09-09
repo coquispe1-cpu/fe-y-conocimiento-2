@@ -5,9 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registro de Usuario</title>
     <style>
-        /* Estilos generales para el cuerpo de la página
-         * Usamos un degradado para el fondo y una fuente limpia
-         */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         
         body {
@@ -21,9 +18,6 @@
             color: #f0f0f0;
         }
 
-        /* Contenedor principal del formulario
-         * Le damos un fondo blanco, esquinas redondeadas y una sombra para que se destaque
-         */
         .form-container {
             background-color: #ffffff;
             padding: 30px;
@@ -42,13 +36,11 @@
             text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
         }
 
-        /* Estilos del formulario */
         form {
             display: flex;
             flex-direction: column;
         }
 
-        /* Estilos de las etiquetas de los campos */
         label {
             text-align: left;
             margin-bottom: 5px;
@@ -56,7 +48,6 @@
             font-weight: 600;
         }
 
-        /* Estilos de los campos de entrada de texto y email */
         input {
             padding: 12px;
             margin-bottom: 20px;
@@ -66,14 +57,12 @@
             transition: border-color 0.3s, box-shadow 0.3s;
         }
 
-        /* Efecto cuando el usuario hace clic en el campo de entrada */
         input:focus {
             border-color: #e43f5a;
             box-shadow: 0 0 5px rgba(228, 63, 90, 0.5);
             outline: none;
         }
 
-        /* Estilos del botón */
         button {
             background: #e43f5a;
             color: white;
@@ -86,14 +75,12 @@
             transition: background 0.3s, transform 0.2s, box-shadow 0.3s;
         }
 
-        /* Efecto al pasar el cursor sobre el botón */
         button:hover {
             background: #c6283d;
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
 
-        /* Animación para que el formulario aparezca suavemente al cargar la página */
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -105,7 +92,6 @@
             }
         }
 
-        /* Contenedor de mensajes de feedback */
         #message-container {
             margin-top: 20px;
             padding: 15px;
@@ -179,102 +165,81 @@
         <div id="message-container"></div>
     </div>
     
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-
-        // Global variables provided by the Canvas environment. DO NOT change them.
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-
-        document.addEventListener('DOMContentLoaded', async () => {
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
             const registroForm = document.getElementById('registro-form');
             const messageContainer = document.getElementById('message-container');
             const registerButton = document.getElementById('register-button');
 
-            // Inicializar Firebase
-            let app, db, auth;
-            try {
-                app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
-                
-                // Autenticar al usuario
-                if (initialAuthToken) {
-                    await signInWithCustomToken(auth, initialAuthToken);
-                } else {
-                    await signInAnonymously(auth);
+            // URL del servidor de Render
+            const urlBackend = 'https://fe-y-conocimiento-2.onrender.com/submit-form';
+
+            registroForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                // Mostrar mensaje de carga y deshabilitar botón
+                if (messageContainer) {
+                    messageContainer.style.display = 'block';
+                    messageContainer.innerHTML = 'Conectando con el servidor... <span class="spinner"></span>';
+                    messageContainer.className = 'loading';
                 }
-            } catch (error) {
-                console.error("Error al inicializar Firebase:", error);
-                messageContainer.style.display = 'block';
-                messageContainer.innerHTML = 'Error de configuración. Revisa la consola para más detalles.';
-                messageContainer.className = 'error';
-                return;
-            }
+                if (registerButton) {
+                    registerButton.disabled = true;
+                }
 
-            // Escuchar el estado de autenticación
-            onAuthStateChanged(auth, (user) => {
-                if (user) {
-                    // El usuario está autenticado, podemos proceder
-                    console.log("Usuario autenticado:", user.uid);
-                    registroForm.addEventListener('submit', async (e) => {
-                        e.preventDefault();
+                const nombre = document.getElementById('nombre').value;
+                const email = document.getElementById('email').value;
+                const celular = document.getElementById('celular').value;
+                const edad = document.getElementById('edad').value;
+                const residencia = document.getElementById('residencia').value;
+                const procedencia = document.getElementById('procedencia').value;
 
-                        // Mostrar mensaje de carga y deshabilitar botón
-                        if (messageContainer) {
-                            messageContainer.style.display = 'block';
-                            messageContainer.innerHTML = 'Registrando usuario... <span class="spinner"></span>';
-                            messageContainer.className = 'loading';
-                        }
-                        if (registerButton) {
-                            registerButton.disabled = true;
-                        }
+                const nuevoUsuario = {
+                    nombre,
+                    email,
+                    celular,
+                    edad,
+                    residencia,
+                    procedencia
+                };
 
-                        const formData = new FormData(registroForm);
-                        const nuevoUsuario = {};
-                        formData.forEach((value, key) => {
-                            nuevoUsuario[key] = value;
-                        });
-                        
-                        try {
-                            // Guardar los datos en Firestore en la colección correcta
-                            await addDoc(collection(db, `/artifacts/${appId}/users/${user.uid}/registros`), {
-                                ...nuevoUsuario,
-                                timestamp: new Date()
-                            });
-
-                            // Mostrar mensaje de éxito
-                            if (messageContainer) {
-                                messageContainer.innerHTML = '¡Usuario registrado exitosamente!';
-                                messageContainer.className = 'success';
-                            }
-                            registroForm.reset();
-
-                        } catch (error) {
-                            console.error('Error al registrar usuario en Firestore:', error);
-                            if (messageContainer) {
-                                messageContainer.innerHTML = `Error al registrar usuario: ${error.message}.`;
-                                messageContainer.className = 'error';
-                            }
-                        } finally {
-                            // Volver a habilitar el botón
-                            if (registerButton) {
-                                registerButton.disabled = false;
-                            }
-                        }
+                try {
+                    const respuesta = await fetch(urlBackend, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(nuevoUsuario)
                     });
-                } else {
-                    // El usuario no está autenticado, deshabilitar el formulario
+
+                    const data = await respuesta.json();
+
+                    if (respuesta.ok) {
+                        // Mostrar mensaje de éxito
+                        if (messageContainer) {
+                            messageContainer.innerHTML = '¡Usuario registrado exitosamente!';
+                            messageContainer.className = 'success';
+                        }
+                        registroForm.reset();
+                    } else {
+                        // Mostrar mensaje de error del servidor
+                        if (messageContainer) {
+                            messageContainer.innerHTML = `Error al registrar usuario: ${data.error || 'Intenta de nuevo.'}`;
+                            messageContainer.className = 'error';
+                        }
+                    }
+
+                } catch (error) {
+                    // Mostrar mensaje de error de conexión
                     if (messageContainer) {
-                        messageContainer.style.display = 'block';
-                        messageContainer.innerHTML = 'Error: No se pudo autenticar al usuario. Por favor, recarga la página.';
+                        messageContainer.innerHTML = 'Error al conectar con el servidor. Por favor, inténtalo de nuevo.';
                         messageContainer.className = 'error';
                     }
+                    console.error('Error al enviar el formulario:', error);
+                } finally {
+                    // Volver a habilitar el botón
                     if (registerButton) {
-                        registerButton.disabled = true;
+                        registerButton.disabled = false;
                     }
                 }
             });
@@ -282,3 +247,4 @@
     </script>
 </body>
 </html>
+
