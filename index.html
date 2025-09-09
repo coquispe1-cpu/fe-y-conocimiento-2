@@ -42,6 +42,14 @@
             </button>
         </form>
         <div id="message-container" class="mt-4 p-4 rounded-lg text-center hidden"></div>
+
+        <!-- Nuevo contenedor para mostrar la lista de usuarios -->
+        <div id="user-list-container" class="mt-8">
+            <h2 class="text-2xl font-bold text-gray-800 text-center mb-4">Usuarios Registrados</h2>
+            <div id="user-list" class="space-y-4">
+                <!-- Los usuarios se mostrarán aquí -->
+            </div>
+        </div>
     </div>
 
     <script>
@@ -49,6 +57,44 @@
             const form = document.getElementById('registro-form');
             const messageContainer = document.getElementById('message-container');
             const registerButton = document.getElementById('register-button');
+            const userList = document.getElementById('user-list');
+
+            // Función para mostrar la lista de usuarios en la página
+            const displayUsers = () => {
+                userList.innerHTML = '';
+                try {
+                    const storedData = localStorage.getItem('registros_usuarios');
+                    if (storedData) {
+                        const registros = JSON.parse(storedData);
+                        if (registros.length === 0) {
+                            userList.innerHTML = '<p class="text-center text-gray-500">Aún no hay usuarios registrados.</p>';
+                            return;
+                        }
+                        registros.forEach((user, index) => {
+                            const userCard = document.createElement('div');
+                            userCard.className = 'bg-gray-100 p-4 rounded-lg shadow-sm';
+                            userCard.innerHTML = `
+                                <h3 class="font-bold text-gray-800">Usuario #${index + 1}</h3>
+                                <p class="text-sm text-gray-600"><strong>Nombre:</strong> ${user.nombre}</p>
+                                <p class="text-sm text-gray-600"><strong>Email:</strong> ${user.email}</p>
+                                <p class="text-sm text-gray-600"><strong>Celular:</strong> ${user.celular || 'N/A'}</p>
+                                <p class="text-sm text-gray-600"><strong>Edad:</strong> ${user.edad || 'N/A'}</p>
+                                <p class="text-sm text-gray-600"><strong>Residencia:</strong> ${user.residencia || 'N/A'}</p>
+                                <p class="text-sm text-gray-600"><strong>Procedencia:</strong> ${user.procedencia || 'N/A'}</p>
+                            `;
+                            userList.appendChild(userCard);
+                        });
+                    } else {
+                        userList.innerHTML = '<p class="text-center text-gray-500">Aún no hay usuarios registrados.</p>';
+                    }
+                } catch (error) {
+                    console.error("Error al mostrar los registros:", error);
+                    userList.innerHTML = '<p class="text-center text-red-500">Error al cargar los registros.</p>';
+                }
+            };
+
+            // Muestra los usuarios existentes al cargar la página
+            displayUsers();
 
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
@@ -61,7 +107,6 @@
                 const formData = new FormData(form);
                 const data = Object.fromEntries(formData.entries());
                 
-                // Intenta cargar los registros existentes de localStorage
                 let registros = [];
                 try {
                     const storedData = localStorage.getItem('registros_usuarios');
@@ -72,17 +117,14 @@
                     console.error("Error al leer de localStorage:", error);
                 }
 
-                // Agrega el nuevo registro
                 registros.push(data);
 
                 try {
-                    // Guarda todos los registros en localStorage
                     localStorage.setItem('registros_usuarios', JSON.stringify(registros));
-
                     messageContainer.textContent = '¡Usuario registrado exitosamente!';
                     messageContainer.className = 'bg-green-100 text-green-800 border border-green-200 p-3 rounded-lg font-bold text-center';
                     form.reset();
-
+                    displayUsers(); // Actualiza la lista en la página
                     console.log("Nuevo registro guardado:", data);
                     console.log("Todos los registros en localStorage:", registros);
 
