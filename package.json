@@ -1,16 +1,13 @@
 {
   "name": "fe-y-conocimiento-2",
   "version": "1.0.0",
-  "description": "",
+  "description": "Servidor para conectar un formulario HTML con Google Sheets",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
-    "axios": "^1.7.2",
+    "axios": "^1.6.8",
     "cors": "^2.8.5",
     "express": "^4.19.2"
   }
