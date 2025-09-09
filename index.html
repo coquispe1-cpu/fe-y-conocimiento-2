@@ -31,8 +31,11 @@
         
         // Verifica si la configuración de Firebase es válida
         if (!firebaseConfig.apiKey || firebaseConfig.apiKey === "TU_API_KEY") {
+            const messageContainer = document.getElementById('message-container');
+            messageContainer.style.display = 'block';
+            messageContainer.textContent = "Error: Por favor, configura Firebase en el código. Abre el archivo y reemplaza los valores de 'firebaseConfig'.";
+            messageContainer.className = 'bg-red-100 text-red-800 border border-red-200 p-3 rounded-lg font-bold text-center';
             console.error("Firebase config is not set. Please replace the placeholder values with your own configuration.");
-            alert("Error: Por favor, configura Firebase en el código.");
         } else {
             const app = initializeApp(firebaseConfig);
             const db = getFirestore(app);
@@ -124,4 +127,4 @@
         <div id="message-container" class="mt-4 p-4 rounded-lg text-center hidden"></div>
     </div>
 </body>
-</h
+</html>
