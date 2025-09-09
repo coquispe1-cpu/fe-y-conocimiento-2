@@ -1,4 +1,4 @@
-services:
+.render.ymlservices:
   - type: web
     name: fe-y-conocimiento
     env: node
