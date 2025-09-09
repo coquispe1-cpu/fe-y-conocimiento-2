@@ -10,7 +10,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware para habilitar CORS (Cross-Origin Resource Sharing)
-// Esto permite que el formulario en GitHub se comunique con este servidor.
+// Esto permite que el formulario se comunique con este servidor.
 app.use(cors());
 
 // Middleware para parsear el cuerpo de las solicitudes como JSON
@@ -18,37 +18,36 @@ app.use(express.json());
 
 // Ruta principal para verificar que el servidor está funcionando
 app.get('/', (req, res) => {
-  res.status(200).send('Servidor de registro activo.');
+    res.status(200).send('Servidor de registro activo.');
 });
 
 /**
  * Ruta para manejar la solicitud POST del formulario.
  * Esta ruta recibe los datos del formulario y los reenvía a Google Apps Script.
+ * La ruta es '/submit-form' para coincidir con el formulario.
  */
-app.post('/api/registro', async (req, res) => {
-  try {
-    // La URL de tu aplicación web de Google Apps Script
-    const googleAppsScriptUrl = 'https://script.google.com/macros/s/AKfycbw2DDuzzG1SWPy_-Z0owjhFdsOJS5GgirdvBCiW9fKfXfrtLbfCncBiE6SHLOka6OnZ/exec';
-    
-    // Los datos enviados desde el formulario están en req.body
-    const formData = req.body;
-    
-    // Reenviar los datos a Google Apps Script
-    // Usamos axios para enviar una solicitud POST
-    // Axios enviará los datos en formato JSON, que es lo que el script de Google espera
-    const response = await axios.post(googleAppsScriptUrl, formData);
+app.post('/submit-form', async (req, res) => {
+    try {
+        // La URL de tu aplicación web de Google Apps Script
+        const googleAppsScriptUrl = 'https://script.google.com/macros/s/AKfycbw2DDuzzG1SWPy_-Z0owjhFdsOJS5GgirdvBCiW9fKfXfrtLbfCncBiE6SHLOka6OnZ/exec';
+        
+        // Los datos enviados desde el formulario están en req.body
+        const formData = req.body;
+        
+        // Reenviar los datos a Google Apps Script
+        const response = await axios.post(googleAppsScriptUrl, formData);
 
-    // Google Apps Script devuelve un objeto JSON en la respuesta.
-    // Lo enviamos de vuelta al cliente (el formulario web).
-    res.json(response.data);
+        // Google Apps Script devuelve un objeto JSON en la respuesta.
+        // Lo enviamos de vuelta al cliente (el formulario web).
+        res.json(response.data);
 
-  } catch (error) {
-    console.error('Error al reenviar los datos a Google Apps Script:', error.message);
-    res.status(500).json({ status: 'error', error: 'Error interno del servidor.' });
-  }
+    } catch (error) {
+        console.error('Error al reenviar los datos a Google Apps Script:', error.message);
+        res.status(500).json({ status: 'error', error: 'Error interno del servidor.' });
+    }
 });
 
 // Iniciar el servidor
 app.listen(PORT, () => {
-  console.log(`Servidor escuchando en el puerto ${PORT}`);
+    console.log(`Servidor escuchando en el puerto ${PORT}`);
 });
