@@ -11,7 +11,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         setLogLevel('Debug');
@@ -53,12 +53,11 @@
                     userList.innerHTML = '<p class="text-center text-gray-500">Aún no hay usuarios registrados.</p>';
                     return;
                 }
-                registros.forEach((user, index) => {
+                registros.forEach((user) => {
                     const userCard = document.createElement('div');
-                    userCard.className = 'bg-gray-100 p-4 rounded-lg shadow-sm flex justify-between items-center';
+                    userCard.className = 'bg-gray-100 p-4 rounded-lg shadow-sm flex justify-between items-start';
                     userCard.innerHTML = `
                         <div>
-                            <h3 class="font-bold text-gray-800">Usuario #${index + 1}</h3>
                             <p class="text-sm text-gray-600"><strong>Nombre:</strong> ${user.nombre}</p>
                             <p class="text-sm text-gray-600"><strong>Email:</strong> ${user.email}</p>
                             <p class="text-sm text-gray-600"><strong>Celular:</strong> ${user.celular || 'N/A'}</p>
@@ -67,9 +66,24 @@
                             <p class="text-sm text-gray-600"><strong>Procedencia:</strong> ${user.procedencia || 'N/A'}</p>
                             <p class="text-sm text-gray-600"><strong>Tiempo como creyente:</strong> ${user.tiempo_creyente || 'N/A'}</p>
                             <p class="text-sm text-gray-600"><strong>Bautizado en agua:</strong> ${user.bautizado_agua || 'N/A'}</p>
+                            <p class="text-sm text-gray-600"><strong>Bautismo del Espíritu Santo:</strong> ${user.bautismo_espiritu_santo || 'N/A'}</p>
                         </div>
+                        <button class="delete-button bg-red-500 text-white font-bold py-1 px-3 rounded-lg hover:bg-red-600 transition-colors" data-id="${user.id}">Eliminar</button>
                     `;
                     userList.appendChild(userCard);
+                });
+
+                document.querySelectorAll('.delete-button').forEach(button => {
+                    button.addEventListener('click', async (e) => {
+                        const docId = e.target.dataset.id;
+                        const collectionPath = `artifacts/${appId}/public/data/registros`;
+                        try {
+                            await deleteDoc(doc(db, collectionPath, docId));
+                            console.log("Documento eliminado con éxito:", docId);
+                        } catch (error) {
+                            console.error("Error al eliminar el documento:", error);
+                        }
+                    });
                 });
             };
 
@@ -86,7 +100,7 @@
                     onSnapshot(q, (querySnapshot) => {
                         const registros = [];
                         querySnapshot.forEach((doc) => {
-                            registros.push(doc.data());
+                            registros.push({ id: doc.id, ...doc.data() });
                         });
                         displayUsers(registros);
                     }, (error) => {
@@ -165,11 +179,25 @@
             </div>
             <div>
                 <label for="tiempo_creyente" class="block text-gray-700 font-medium mb-1">Tiempo como creyente:</label>
-                <input type="text" id="tiempo_creyente" name="tiempo_creyente" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 transition-shadow">
+                <select id="tiempo_creyente" name="tiempo_creyente" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 transition-shadow">
+                    <option value="N/A">Seleccione una opción</option>
+                    <option value="Menos de 1 año">Menos de 1 año</option>
+                    <option value="1 a 5 años">1 a 5 años</option>
+                    <option value="5 a 10 años">5 a 10 años</option>
+                    <option value="Más de 10 años">Más de 10 años</option>
+                </select>
             </div>
             <div>
                 <label for="bautizado_agua" class="block text-gray-700 font-medium mb-1">¿Se bautizó en agua?:</label>
                 <select id="bautizado_agua" name="bautizado_agua" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 transition-shadow">
+                    <option value="N/A">Seleccione una opción</option>
+                    <option value="Si">Sí</option>
+                    <option value="No">No</option>
+                </select>
+            </div>
+            <div>
+                <label for="bautismo_espiritu_santo" class="block text-gray-700 font-medium mb-1">¿Recibiste Bautismo del Espíritu Santo?:</label>
+                <select id="bautismo_espiritu_santo" name="bautismo_espiritu_santo" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 transition-shadow">
                     <option value="N/A">Seleccione una opción</option>
                     <option value="Si">Sí</option>
                     <option value="No">No</option>
