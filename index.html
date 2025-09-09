@@ -179,14 +179,41 @@
         <div id="message-container"></div>
     </div>
     
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInWithCustomToken, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+        // Global variables provided by the Canvas environment. DO NOT change them.
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        document.addEventListener('DOMContentLoaded', async () => {
             const registroForm = document.getElementById('registro-form');
             const messageContainer = document.getElementById('message-container');
             const registerButton = document.getElementById('register-button');
 
-            // URL del servidor de Render
-            const urlBackend = 'https://fe-y-conocimiento-2.onrender.com/submit-form';
+            // Inicializar Firebase
+            let app, db, auth;
+            try {
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                
+                // Autenticar al usuario
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (error) {
+                console.error("Error al inicializar Firebase:", error);
+                messageContainer.style.display = 'block';
+                messageContainer.innerHTML = 'Error de configuración. Revisa la consola para más detalles.';
+                messageContainer.className = 'error';
+                return;
+            }
 
             registroForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
@@ -194,7 +221,7 @@
                 // Mostrar mensaje de carga y deshabilitar botón
                 if (messageContainer) {
                     messageContainer.style.display = 'block';
-                    messageContainer.innerHTML = 'Conectando con el servidor... <span class="spinner"></span>';
+                    messageContainer.innerHTML = 'Registrando usuario... <span class="spinner"></span>';
                     messageContainer.className = 'loading';
                 }
                 if (registerButton) {
@@ -202,41 +229,31 @@
                 }
 
                 const formData = new FormData(registroForm);
-                const nuevoUsuario = Object.fromEntries(formData.entries());
-
+                const nuevoUsuario = {};
+                formData.forEach((value, key) => {
+                    nuevoUsuario[key] = value;
+                });
+                
                 try {
-                    const respuesta = await fetch(urlBackend, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(nuevoUsuario)
+                    // Guardar los datos en Firestore en la colección correcta
+                    await addDoc(collection(db, `/artifacts/${appId}/users/${auth.currentUser.uid}/registros`), {
+                        ...nuevoUsuario,
+                        timestamp: new Date()
                     });
 
-                    const data = await respuesta.json();
-
-                    if (respuesta.ok) {
-                        // Mostrar mensaje de éxito
-                        if (messageContainer) {
-                            messageContainer.innerHTML = '¡Usuario registrado exitosamente!';
-                            messageContainer.className = 'success';
-                        }
-                        registroForm.reset();
-                    } else {
-                        // Mostrar mensaje de error del servidor
-                        if (messageContainer) {
-                            messageContainer.innerHTML = `Error al registrar usuario: ${data.error || 'Intenta de nuevo.'}`;
-                            messageContainer.className = 'error';
-                        }
+                    // Mostrar mensaje de éxito
+                    if (messageContainer) {
+                        messageContainer.innerHTML = '¡Usuario registrado exitosamente!';
+                        messageContainer.className = 'success';
                     }
+                    registroForm.reset();
 
                 } catch (error) {
-                    // Mostrar mensaje de error de conexión
+                    console.error('Error al registrar usuario en Firestore:', error);
                     if (messageContainer) {
-                        messageContainer.innerHTML = 'Error al conectar con el servidor. Por favor, inténtalo de nuevo.';
+                        messageContainer.innerHTML = `Error al registrar usuario: ${error.message}. Intenta de nuevo.`;
                         messageContainer.className = 'error';
                     }
-                    console.error('Error al enviar el formulario:', error);
                 } finally {
                     // Volver a habilitar el botón
                     if (registerButton) {
@@ -247,4 +264,4 @@
         });
     </script>
 </body>
-</html
+</
