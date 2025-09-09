@@ -32,7 +32,10 @@ function doPost(e) {
       datosFormulario.celular,
       datosFormulario.edad,
       datosFormulario.residencia,
-      datosFormulario.procedencia
+      datosFormulario.procedencia,
+      datosFormulario.tiempoCreyente, // Nuevo campo
+      datosFormulario.bautizoAgua, // Nuevo campo
+      datosFormulario.bautismoEspirituSanto // Nuevo campo
     ];
     
     // Agregar la nueva fila de datos a la hoja de cálculo.
