@@ -1,83 +1,179 @@
-/**
- * Lógica para manejar el envío del formulario.
- * Envía los datos a un servidor backend para su procesamiento.
- */
-document.addEventListener('DOMContentLoaded', () => {
-    const registroForm = document.getElementById('registro-form');
-    const messageContainer = document.getElementById('message-container');
-    const registerButton = document.getElementById('register-button');
-
-    registroForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-
-        // Ocultar mensaje y deshabilitar botón mientras se procesa
-        if (messageContainer) {
-            messageContainer.style.display = 'none';
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Usuario</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #2a2a72, #009ffd);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            color: #f0f0f0;
         }
-        if (registerButton) {
-            registerButton.disabled = true;
+        .form-container {
+            background-color: #ffffff;
+            padding: 2.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.25);
+            width: 100%;
+            max-width: 30rem;
+            text-align: center;
+            animation: fadeIn 0.8s ease-in-out;
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
+        h1 {
+            color: #162447;
+            margin-bottom: 2rem;
+            font-weight: bold;
+            font-size: 2rem;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            text-align: left;
+            margin-bottom: 1.5rem;
+        }
+        label {
+            color: #555;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        input {
+            padding: 0.875rem;
+            border: 1px solid #ddd;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        input:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+            outline: none;
+        }
+        button {
+            background: #e43f5a;
+            color: white;
+            padding: 1rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 1.125rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s, box-shadow 0.3s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        button:hover {
+            background: #c6283d;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+        }
+        #mensaje-feedback {
+            margin-top: 1.5rem;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: opacity 0.3s;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
 
-        const nombre = document.getElementById('nombre').value;
-        const email = document.getElementById('email').value;
-        const celular = document.getElementById('celular').value;
-        const edad = document.getElementById('edad').value;
-        const residencia = document.getElementById('residencia').value;
-        const procedencia = document.getElementById('procedencia').value;
+<div class="form-container">
+    <h1>Registro de Usuario</h1>
+    <form id="registro-form">
+        <div class="form-group">
+            <label for="nombre">Nombre:</label>
+            <input type="text" id="nombre" name="nombre" required>
+        </div>
+        <div class="form-group">
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required>
+        </div>
+        <div class="form-group">
+            <label for="celular">Celular:</label>
+            <input type="text" id="celular" name="celular" required>
+        </div>
+        <div class="form-group">
+            <label for="edad">Edad:</label>
+            <input type="number" id="edad" name="edad" required>
+        </div>
+        <div class="form-group">
+            <label for="lugarResidencia">Lugar de residencia:</label>
+            <input type="text" id="lugarResidencia" name="lugarResidencia" required>
+        </div>
+        <div class="form-group">
+            <label for="paisProcedencia">País de procedencia:</label>
+            <input type="text" id="paisProcedencia" name="paisProcedencia" required>
+        </div>
+        
+        <button type="submit">Registrar</button>
+        <p id="mensaje-feedback" class="mt-6 text-center text-sm font-medium hidden"></p>
+    </form>
+</div>
 
-        const nuevoUsuario = {
-            nombre,
-            email,
-            celular,
-            edad,
-            residencia,
-            procedencia
-        };
+<script>
+    document.getElementById('registro-form').addEventListener('submit', async function(event) {
+        event.preventDefault(); // Evita que el formulario se envíe de forma tradicional
 
-        // URL del servidor de Render corregida para que coincida con el servidor
-        const urlBackend = 'https://fe-y-conocimiento-2.onrender.com/api/registro';
+        const feedbackElement = document.getElementById('mensaje-feedback');
+        feedbackElement.textContent = 'Enviando...';
+        feedbackElement.classList.remove('hidden', 'text-green-500', 'text-red-500');
+        feedbackElement.classList.add('text-blue-500');
+
+        const form = event.target;
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+
+        // La URL de tu servidor en Render
+        // Reemplaza con la URL de tu servicio de Render
+        const serverUrl = 'https://fe-y-conocimiento-2.onrender.com';
 
         try {
-            const respuesta = await fetch(urlBackend, {
+            const response = await fetch(`${serverUrl}/api/registro`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(nuevoUsuario)
+                body: JSON.stringify(data)
             });
 
-            const data = await respuesta.json();
+            const result = await response.json();
 
-            if (respuesta.ok) {
-                // Mostrar mensaje de éxito
-                if (messageContainer) {
-                    messageContainer.textContent = '¡Usuario registrado exitosamente!';
-                    messageContainer.className = 'success';
-                    messageContainer.style.display = 'block';
-                }
-                registroForm.reset();
+            if (response.ok && result.status === 'success') {
+                feedbackElement.textContent = '¡Usuario registrado exitosamente!';
+                feedbackElement.classList.remove('text-blue-500', 'text-red-500');
+                feedbackElement.classList.add('text-green-500');
+                form.reset(); // Limpia el formulario
             } else {
-                // Mostrar mensaje de error del servidor
-                if (messageContainer) {
-                    messageContainer.textContent = `Error al registrar usuario: ${data.error || 'Intenta de nuevo.'}`;
-                    messageContainer.className = 'error';
-                    messageContainer.style.display = 'block';
-                }
+                feedbackElement.textContent = result.error || 'Error al conectar con el servidor. Por favor, inténtalo de nuevo.';
+                feedbackElement.classList.remove('text-blue-500', 'text-green-500');
+                feedbackElement.classList.add('text-red-500');
             }
-
         } catch (error) {
-            // Mostrar mensaje de error de conexión
-            if (messageContainer) {
-                messageContainer.textContent = 'Error al conectar con el servidor. Por favor, inténtalo de nuevo.';
-                messageContainer.className = 'error';
-                messageContainer.style.display = 'block';
-            }
-            console.error('Error al enviar el formulario:', error);
-        } finally {
-            // Volver a habilitar el botón
-            if (registerButton) {
-                registerButton.disabled = false;
-            }
+            feedbackElement.textContent = 'Error al conectar con el servidor. Por favor, inténtalo de nuevo.';
+            feedbackElement.classList.remove('text-blue-500', 'text-green-500');
+            feedbackElement.classList.add('text-red-500');
+            console.error('Error:', error);
         }
     });
-});
+</script>
+
+</body>
+</html>
