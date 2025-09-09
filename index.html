@@ -182,7 +182,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { getAuth, signInWithCustomToken, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
         // Global variables provided by the Canvas environment. DO NOT change them.
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
@@ -215,54 +215,66 @@
                 return;
             }
 
-            registroForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
+            // Escuchar el estado de autenticación
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    // El usuario está autenticado, podemos proceder
+                    console.log("Usuario autenticado:", user.uid);
+                    registroForm.addEventListener('submit', async (e) => {
+                        e.preventDefault();
 
-                // Mostrar mensaje de carga y deshabilitar botón
-                if (messageContainer) {
-                    messageContainer.style.display = 'block';
-                    messageContainer.innerHTML = 'Registrando usuario... <span class="spinner"></span>';
-                    messageContainer.className = 'loading';
-                }
-                if (registerButton) {
-                    registerButton.disabled = true;
-                }
+                        // Mostrar mensaje de carga y deshabilitar botón
+                        if (messageContainer) {
+                            messageContainer.style.display = 'block';
+                            messageContainer.innerHTML = 'Registrando usuario... <span class="spinner"></span>';
+                            messageContainer.className = 'loading';
+                        }
+                        if (registerButton) {
+                            registerButton.disabled = true;
+                        }
 
-                const formData = new FormData(registroForm);
-                const nuevoUsuario = {};
-                formData.forEach((value, key) => {
-                    nuevoUsuario[key] = value;
-                });
-                
-                try {
-                    // Verificar si el usuario está autenticado antes de intentar guardar
-                    if (!auth.currentUser) {
-                        throw new Error("El usuario no está autenticado. Por favor, recarga la página.");
-                    }
+                        const formData = new FormData(registroForm);
+                        const nuevoUsuario = {};
+                        formData.forEach((value, key) => {
+                            nuevoUsuario[key] = value;
+                        });
+                        
+                        try {
+                            // Guardar los datos en Firestore en la colección correcta
+                            await addDoc(collection(db, `/artifacts/${appId}/users/${user.uid}/registros`), {
+                                ...nuevoUsuario,
+                                timestamp: new Date()
+                            });
 
-                    // Guardar los datos en Firestore en la colección correcta
-                    await addDoc(collection(db, `/artifacts/${appId}/users/${auth.currentUser.uid}/registros`), {
-                        ...nuevoUsuario,
-                        timestamp: new Date()
+                            // Mostrar mensaje de éxito
+                            if (messageContainer) {
+                                messageContainer.innerHTML = '¡Usuario registrado exitosamente!';
+                                messageContainer.className = 'success';
+                            }
+                            registroForm.reset();
+
+                        } catch (error) {
+                            console.error('Error al registrar usuario en Firestore:', error);
+                            if (messageContainer) {
+                                messageContainer.innerHTML = `Error al registrar usuario: ${error.message}.`;
+                                messageContainer.className = 'error';
+                            }
+                        } finally {
+                            // Volver a habilitar el botón
+                            if (registerButton) {
+                                registerButton.disabled = false;
+                            }
+                        }
                     });
-
-                    // Mostrar mensaje de éxito
+                } else {
+                    // El usuario no está autenticado, deshabilitar el formulario
                     if (messageContainer) {
-                        messageContainer.innerHTML = '¡Usuario registrado exitosamente!';
-                        messageContainer.className = 'success';
-                    }
-                    registroForm.reset();
-
-                } catch (error) {
-                    console.error('Error al registrar usuario en Firestore:', error);
-                    if (messageContainer) {
-                        messageContainer.innerHTML = `Error al registrar usuario: ${error.message}.`;
+                        messageContainer.style.display = 'block';
+                        messageContainer.innerHTML = 'Error: No se pudo autenticar al usuario. Por favor, recarga la página.';
                         messageContainer.className = 'error';
                     }
-                } finally {
-                    // Volver a habilitar el botón
                     if (registerButton) {
-                        registerButton.disabled = false;
+                        registerButton.disabled = true;
                     }
                 }
             });
