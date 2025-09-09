@@ -28,6 +28,7 @@ app.get('/', (req, res) => {
 app.post('/api/registro', async (req, res) => {
   try {
     // La URL de tu aplicación web de Google Apps Script
+    // Esta es la URL que me proporcionaste.
     const googleAppsScriptUrl = 'https://script.google.com/macros/s/AKfycbw2DDuzzG1SWPy_-Z0owjhFdsOJS5GgirdvBCiW9fKfXfrtLbfCncBiE6SHLOka6OnZ/exec';
     
     // Los datos enviados desde el formulario están en req.body
