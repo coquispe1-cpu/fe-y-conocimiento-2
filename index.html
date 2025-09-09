@@ -3,221 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registro de Usuario</title>
+    <title>Registro de Usuario Web</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-        
         body {
             font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #1f4068, #162447);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            color: #f0f0f0;
         }
-        
-        .form-container {
-            background-color: #ffffff;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-            width: 100%;
-            max-width: 450px;
+        .message-box {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 0.5rem;
             text-align: center;
-            animation: fadeIn 1s ease-in-out;
-        }
-        
-        h1 {
-            color: #162447;
-            margin-bottom: 25px;
-            font-weight: bold;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
-        }
-        
-        form {
-            display: flex;
-            flex-direction: column;
-        }
-        
-        label {
-            text-align: left;
-            margin-bottom: 5px;
-            color: #555;
             font-weight: 600;
         }
-        
-        input {
-            padding: 12px;
-            margin-bottom: 20px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            font-size: 16px;
-            transition: border-color 0.3s, box-shadow 0.3s;
-        }
-        
-        input:focus {
-            border-color: #e43f5a;
-            box-shadow: 0 0 5px rgba(228, 63, 90, 0.5);
-            outline: none;
-        }
-        
-        button {
-            background: #e43f5a;
-            color: white;
-            padding: 15px;
-            border: none;
-            border-radius: 6px;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background 0.3s, transform 0.2s, box-shadow 0.3s;
-        }
-        
-        button:hover {
-            background: #c6283d;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        #message-container {
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 6px;
-            font-weight: bold;
-            display: none;
-        }
-        
         .success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
+            background-color: #22c55e; /* Fondo verde vibrante */
+            color: #166534; /* Texto en verde oscuro para mejor contraste */
         }
-        
         .error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        
-        .loading {
-            background-color: #e9f2fb;
-            color: #1f4068;
-            border: 1px solid #bedbf7;
-        }
-
-        .spinner {
-            border: 4px solid rgba(0, 0, 0, 0.1);
-            border-left-color: #e43f5a;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            animation: spin 1s linear infinite;
-            display: inline-block;
-            vertical-align: middle;
-            margin-left: 10px;
-        }
-
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
+            background-color: #fee2e2;
+            color: #991b1b;
         }
     </style>
 </head>
-<body>
-    <div class="form-container">
-        <h1>Registro de Usuario</h1>
-        <form id="registro-form">
-            <label for="nombre">Nombre:</label>
-            <input type="text" id="nombre" name="nombre" required>
+<body class="bg-slate-900 flex justify-center items-center min-h-screen p-4">
+    <div class="bg-white p-8 md:p-12 rounded-xl shadow-2xl w-full max-w-lg">
+        <h1 class="text-3xl md:text-4xl font-extrabold text-center text-gray-900 mb-6">Registro de Usuario</h1>
+        <p class="text-center text-gray-500 mb-4 text-sm">Este formulario envía los datos directamente a tu correo electrónico usando un servicio web. No se necesita una base de datos ni servidor.</p>
 
-            <label for="email">Email:</label>
-            <input type="email" id="email" name="email" required>
-
-            <label for="celular">Celular:</label>
-            <input type="tel" id="celular" name="celular">
-
-            <label for="edad">Edad:</label>
-            <input type="number" id="edad" name="edad">
-
-            <label for="residencia">Lugar de residencia:</label>
-            <input type="text" id="residencia" name="residencia">
-
-            <label for="procedencia">País de procedencia:</label>
-            <input type="text" id="procedencia" name="procedencia">
-
-            <button type="submit" id="register-button">Registrar</button>
+        <form id="registro-form" action="https://formspree.io/f/xkgvyoaz" method="POST" class="space-y-4">
+            <div>
+                <label for="nombre" class="block text-gray-700 font-medium mb-1">Nombre:</label>
+                <input type="text" id="nombre" name="nombre" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 transition-shadow">
+            </div>
+            <div>
+                <label for="email" class="block text-gray-700 font-medium mb-1">Email:</label>
+                <input type="email" id="email" name="email" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 transition-shadow">
+            </div>
+            <div>
+                <label for="celular" class="block text-gray-700 font-medium mb-1">Celular:</label>
+                <input type="tel" id="celular" name="celular" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 transition-shadow">
+            </div>
+            <div>
+                <label for="edad" class="block text-gray-700 font-medium mb-1">Edad:</label>
+                <input type="number" id="edad" name="edad" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 transition-shadow">
+            </div>
+            <div>
+                <label for="residencia" class="block text-gray-700 font-medium mb-1">Lugar de residencia:</label>
+                <input type="text" id="residencia" name="residencia" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 transition-shadow">
+            </div>
+            <div>
+                <label for="procedencia" class="block text-gray-700 font-medium mb-1">País de procedencia:</label>
+                <input type="text" id="procedencia" name="procedencia" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 transition-shadow">
+            </div>
+            <div>
+                <label for="tiempo_creyente" class="block text-gray-700 font-medium mb-1">Tiempo como creyente:</label>
+                <select id="tiempo_creyente" name="tiempo_creyente" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 transition-shadow">
+                    <option value="N/A">Seleccione una opción</option>
+                    <option value="Menos de 1 año">Menos de 1 año</option>
+                    <option value="1 a 5 años">1 a 5 años</option>
+                    <option value="5 a 10 años">5 a 10 años</option>
+                    <option value="Más de 10 años">Más de 10 años</option>
+                </select>
+            </div>
+            <div>
+                <label for="bautizado_agua" class="block text-gray-700 font-medium mb-1">¿Se bautizó en agua?:</label>
+                <select id="bautizado_agua" name="bautizado_agua" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 transition-shadow">
+                    <option value="N/A">Seleccione una opción</option>
+                    <option value="Si">Sí</option>
+                    <option value="No">No</option>
+                </select>
+            </div>
+            <div>
+                <label for="bautismo_espiritu_santo" class="block text-gray-700 font-medium mb-1">¿Recibiste Bautismo del Espíritu Santo?:</label>
+                <select id="bautismo_espiritu_santo" name="bautismo_espiritu_santo" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 transition-shadow">
+                    <option value="N/A">Seleccione una opción</option>
+                    <option value="Si">Sí</option>
+                    <option value="No">No</option>
+                </select>
+            </div>
+            <button type="submit" id="register-button" class="w-full bg-pink-600 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 hover:bg-pink-700 focus:outline-none focus:ring-4 focus:ring-pink-500 focus:ring-opacity-50">
+                Registrar
+            </button>
         </form>
-        <div id="message-container"></div>
+        <div id="form-feedback" class="message-box hidden"></div>
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const registroForm = document.getElementById('registro-form');
-            const messageContainer = document.getElementById('message-container');
-            const registerButton = document.getElementById('register-button');
+        const form = document.getElementById('registro-form');
+        const feedbackDiv = document.getElementById('form-feedback');
 
-            // URL del Google Apps Script
-            const googleAppsScriptUrl = 'https://script.google.com/macros/s/AKfycbyqp-kcIvHh2_JbyCIr1O4ruiBXOoX6kAvjqYHolcq5rUfwgdVZ9cQNkV9BQwjqvHjBLg/exec';
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
 
-            registroForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
+            feedbackDiv.classList.remove('hidden', 'success', 'error');
+            feedbackDiv.textContent = 'Enviando...';
+            
+            const formData = new FormData(form);
 
-                if (messageContainer) {
-                    messageContainer.style.display = 'block';
-                    messageContainer.innerHTML = 'Enviando... <span class="spinner"></span>';
-                    messageContainer.className = 'loading';
-                }
-                if (registerButton) {
-                    registerButton.disabled = true;
-                }
-
-                const formData = new FormData(registroForm);
-                const data = Object.fromEntries(formData.entries());
-
-                try {
-                    const response = await fetch(googleAppsScriptUrl, {
-                        method: 'POST',
-                        body: JSON.stringify(data),
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        mode: 'no-cors'
-                    });
-
-                    // El modo 'no-cors' no permite leer la respuesta, pero la petición se envía.
-                    // Asumimos el éxito si no hay un error de red.
-                    if (messageContainer) {
-                        messageContainer.innerHTML = '¡Bienvenido!';
-                        messageContainer.className = 'success';
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'Accept': 'application/json'
                     }
-                    registroForm.reset();
+                });
 
-                } catch (error) {
-                    if (messageContainer) {
-                        messageContainer.innerHTML = 'Error al conectar con el servicio.';
-                        messageContainer.className = 'error';
-                    }
-                    console.error('Error:', error);
-                } finally {
-                    if (registerButton) {
-                        registerButton.disabled = false;
-                    }
+                if (response.ok) {
+                    feedbackDiv.textContent = 'Bienvenido';
+                    feedbackDiv.classList.add('success');
+                    form.reset();
+                } else {
+                    feedbackDiv.textContent = 'Ocurrió un error. Inténtalo de nuevo.';
+                    feedbackDiv.classList.add('error');
+                    console.error('Form submission failed:', response.statusText);
                 }
-            });
+            } catch (error) {
+                feedbackDiv.textContent = 'Error de conexión. Revisa tu internet.';
+                feedbackDiv.classList.add('error');
+                console.error('Form submission failed:', error);
+            }
         });
     </script>
 </body>
