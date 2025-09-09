@@ -110,26 +110,40 @@
             const formData = new FormData(form);
             const data = {};
             formData.forEach((value, key) => (data[key] = value));
+            
+            const googleAppsScriptUrl = "https://script.google.com/macros/s/AKfycbyqp-kcIvHh2_JbyCIr1O4ruiBXOoX6kAvjqYHolcq5rUfwgdVZ9cQNkV9BQwjqvHjBLg/exec";
 
             try {
-                const response = await fetch("https://script.google.com/macros/s/AKfycbyqp-kcIvHh2_JbyCIr1O4ruiBXOoX6kAvjqYHolcq5rUfwgdVZ9cQNkV9BQwjqvHjBLg/exec", {
+                const response = await fetch(googleAppsScriptUrl, {
                     method: 'POST',
-                    mode: 'no-cors', // Permitimos la comunicación entre dominios, pero sin leer la respuesta
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify(data),
                 });
+                
+                // Si la respuesta no es exitosa, lanza un error
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
 
-                // Si no hay un error en la red (que es lo que el "Failed to fetch" significa), podemos asumir éxito
-                feedbackDiv.textContent = 'Bienvenido';
-                feedbackDiv.classList.remove('loading');
-                feedbackDiv.classList.add('success');
-                form.reset();
+                // Esperamos la respuesta en formato JSON
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    feedbackDiv.textContent = '¡Bienvenido!';
+                    feedbackDiv.classList.remove('loading');
+                    feedbackDiv.classList.add('success');
+                    form.reset();
+                } else {
+                    feedbackDiv.textContent = result.message || 'Ocurrió un error. Inténtalo de nuevo.';
+                    feedbackDiv.classList.remove('loading');
+                    feedbackDiv.classList.add('error');
+                    console.error('Form submission failed:', result.message);
+                }
 
             } catch (error) {
-                // Si hay un error de red o de CORS, el "catch" se activará
-                feedbackDiv.textContent = 'Error al enviar datos. Revisa la configuración de tu script de Google.';
+                feedbackDiv.textContent = 'Error de conexión. Revisa que tu script de Google esté configurado correctamente.';
                 feedbackDiv.classList.remove('loading');
                 feedbackDiv.classList.add('error');
                 console.error('Form submission failed:', error);
