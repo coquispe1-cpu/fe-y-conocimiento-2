@@ -1,82 +1,47 @@
-/**
- * Lógica para manejar el envío del formulario.
- * Envía los datos a un servidor backend para su procesamiento.
- */
-document.addEventListener('DOMContentLoaded', () => {
-    const registroForm = document.getElementById('registro-form');
-    const messageContainer = document.getElementById('mensaje-feedback');
-    const registerButton = document.querySelector('#registro-form button[type="submit"]');
+document.getElementById('registro-form').addEventListener('submit', async function(event) {
+    event.preventDefault(); // Evita que el formulario se envíe de forma tradicional
 
-    registroForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
+    const feedbackElement = document.getElementById('message-container');
+    const registerButton = document.getElementById('register-button');
 
-        // Ocultar mensaje y deshabilitar botón mientras se procesa
-        if (messageContainer) {
-            messageContainer.style.display = 'none';
+    // Mostrar mensaje de carga y deshabilitar botón
+    feedbackElement.style.display = 'block';
+    feedbackElement.innerHTML = 'Enviando... <span class="spinner"></span>';
+    feedbackElement.className = 'loading';
+    registerButton.disabled = true;
+
+    const form = event.target;
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+
+    // La URL de tu servidor en Render, con la ruta correcta
+    const serverUrl = 'https://fe-y-conocimiento-2.onrender.com/submit-form';
+
+    try {
+        const response = await fetch(serverUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+
+        // La respuesta del servidor de Render es JSON
+        const result = await response.json();
+
+        if (response.ok && result.status === 'success') {
+            feedbackElement.innerHTML = '¡Usuario registrado exitosamente!';
+            feedbackElement.className = 'success';
+            form.reset(); // Limpia el formulario
+        } else {
+            feedbackElement.innerHTML = result.error || 'Error al conectar con el servidor. Por favor, inténtalo de nuevo.';
+            feedbackElement.className = 'error';
         }
-        if (registerButton) {
-            registerButton.disabled = true;
-            registerButton.textContent = 'Registrando...';
-        }
-
-        const nombre = document.getElementById('nombre').value;
-        const email = document.getElementById('email').value;
-        const celular = document.getElementById('celular').value;
-        const edad = document.getElementById('edad').value;
-        const residencia = document.getElementById('lugarResidencia').value;
-        const procedencia = document.getElementById('paisProcedencia').value;
-
-        const nuevoUsuario = {
-            nombre,
-            email,
-            celular,
-            edad,
-            residencia,
-            procedencia
-        };
-
-        // URL del servidor de Render corregida para que coincida con el servidor
-        const urlBackend = 'https://fe-y-conocimiento-2.onrender.com/api/registro';
-
-        try {
-            const respuesta = await fetch(urlBackend, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(nuevoUsuario)
-            });
-
-            const data = await respuesta.json();
-
-            if (respuesta.ok) {
-                // Mostrar mensaje de éxito
-                if (messageContainer) {
-                    messageContainer.textContent = '¡Usuario registrado exitosamente!';
-                    messageContainer.className = 'mt-6 text-center text-sm font-medium text-green-600 block';
-                }
-                registroForm.reset();
-            } else {
-                // Mostrar mensaje de error del servidor
-                if (messageContainer) {
-                    messageContainer.textContent = `Error al registrar usuario: ${data.error || 'Intenta de nuevo.'}`;
-                    messageContainer.className = 'mt-6 text-center text-sm font-medium text-red-600 block';
-                }
-            }
-
-        } catch (error) {
-            // Mostrar mensaje de error de conexión
-            if (messageContainer) {
-                messageContainer.textContent = 'Error al conectar con el servidor. Por favor, inténtalo de nuevo.';
-                messageContainer.className = 'mt-6 text-center text-sm font-medium text-red-600 block';
-            }
-            console.error('Error al enviar el formulario:', error);
-        } finally {
-            // Volver a habilitar el botón
-            if (registerButton) {
-                registerButton.disabled = false;
-                registerButton.textContent = 'Registrar';
-            }
-        }
-    });
+    } catch (error) {
+        feedbackElement.innerHTML = 'Error de conexión. Por favor, verifica el servidor.';
+        feedbackElement.className = 'error';
+        console.error('Error:', error);
+    } finally {
+        registerButton.disabled = false;
+    }
 });
