@@ -8,10 +8,136 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
+        setLogLevel('Debug');
+        
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : null);
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+        let db, auth;
+        if (firebaseConfig) {
+            const app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+            
+            if (initialAuthToken) {
+                signInWithCustomToken(auth, initialAuthToken).catch((error) => {
+                    console.error("Error signing in with custom token:", error);
+                });
+            } else {
+                signInAnonymously(auth).catch((error) => {
+                    console.error("Error signing in anonymously:", error);
+                });
+            }
+        } else {
+            console.error("Firebase config is not defined. The app will not be able to save or load data.");
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('registro-form');
+            const messageContainer = document.getElementById('message-container');
+            const registerButton = document.getElementById('register-button');
+            const userList = document.getElementById('user-list');
+            const userIdDisplay = document.getElementById('user-id');
+
+            // Función para mostrar los usuarios en la página desde Firestore
+            const displayUsers = (registros) => {
+                userList.innerHTML = '';
+                if (registros.length === 0) {
+                    userList.innerHTML = '<p class="text-center text-gray-500">Aún no hay usuarios registrados.</p>';
+                    return;
+                }
+                registros.forEach((user, index) => {
+                    const userCard = document.createElement('div');
+                    userCard.className = 'bg-gray-100 p-4 rounded-lg shadow-sm flex justify-between items-center';
+                    userCard.innerHTML = `
+                        <div>
+                            <h3 class="font-bold text-gray-800">Usuario #${index + 1}</h3>
+                            <p class="text-sm text-gray-600"><strong>Nombre:</strong> ${user.nombre}</p>
+                            <p class="text-sm text-gray-600"><strong>Email:</strong> ${user.email}</p>
+                            <p class="text-sm text-gray-600"><strong>Celular:</strong> ${user.celular || 'N/A'}</p>
+                            <p class="text-sm text-gray-600"><strong>Edad:</strong> ${user.edad || 'N/A'}</p>
+                            <p class="text-sm text-gray-600"><strong>Residencia:</strong> ${user.residencia || 'N/A'}</p>
+                            <p class="text-sm text-gray-600"><strong>Procedencia:</strong> ${user.procedencia || 'N/A'}</p>
+                            <p class="text-sm text-gray-600"><strong>Tiempo como creyente:</strong> ${user.tiempo_creyente || 'N/A'}</p>
+                            <p class="text-sm text-gray-600"><strong>Bautizado en agua:</strong> ${user.bautizado_agua || 'N/A'}</p>
+                        </div>
+                    `;
+                    userList.appendChild(userCard);
+                });
+            };
+
+            // Escuchando los cambios de autenticación
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    userIdDisplay.textContent = `ID de Usuario: ${user.uid}`;
+                    console.log("Usuario autenticado con ID:", user.uid);
+                    
+                    // Solo si hay un usuario autenticado, escuchar los registros
+                    const collectionPath = `artifacts/${appId}/public/data/registros`;
+                    const q = query(collection(db, collectionPath));
+                    
+                    onSnapshot(q, (querySnapshot) => {
+                        const registros = [];
+                        querySnapshot.forEach((doc) => {
+                            registros.push(doc.data());
+                        });
+                        displayUsers(registros);
+                    }, (error) => {
+                        console.error("Error al escuchar los registros:", error);
+                    });
+                } else {
+                    userIdDisplay.textContent = "No autenticado";
+                    console.log("Usuario no autenticado.");
+                    userList.innerHTML = '<p class="text-center text-gray-500">Necesitas autenticarte para ver los registros.</p>';
+                }
+            });
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                messageContainer.style.display = 'block';
+                messageContainer.textContent = 'Enviando datos...';
+                messageContainer.className = 'bg-blue-100 text-blue-800 border border-blue-200 p-3 rounded-lg font-bold text-center';
+                registerButton.disabled = true;
+
+                const formData = new FormData(form);
+                const data = Object.fromEntries(formData.entries());
+
+                if (!db) {
+                    messageContainer.textContent = 'Error: No se puede conectar a la base de datos.';
+                    messageContainer.className = 'bg-red-100 text-red-800 border border-red-200 p-3 rounded-lg font-bold text-center';
+                    registerButton.disabled = false;
+                    return;
+                }
+                
+                const collectionPath = `artifacts/${appId}/public/data/registros`;
+                try {
+                    await addDoc(collection(db, collectionPath), data);
+                    messageContainer.textContent = '¡Usuario registrado exitosamente!';
+                    messageContainer.className = 'bg-green-100 text-green-800 border border-green-200 p-3 rounded-lg font-bold text-center';
+                    form.reset();
+                } catch (error) {
+                    messageContainer.textContent = 'Error al registrar: ' + error.message;
+                    messageContainer.className = 'bg-red-100 text-red-800 border border-red-200 p-3 rounded-lg font-bold text-center';
+                    console.error('Error al enviar el formulario:', error);
+                } finally {
+                    registerButton.disabled = false;
+                }
+            });
+        });
+    </script>
 </head>
 <body class="bg-slate-900 flex justify-center items-center min-h-screen p-4">
     <div class="bg-white p-8 md:p-12 rounded-xl shadow-2xl w-full max-w-lg transition-all duration-500 ease-in-out">
         <h1 class="text-3xl md:text-4xl font-extrabold text-center text-gray-900 mb-6">Registro de Usuario</h1>
+        <p id="user-id" class="text-center text-gray-500 mb-4 text-sm font-mono"></p>
         <form id="registro-form" class="space-y-4">
             <div>
                 <label for="nombre" class="block text-gray-700 font-medium mb-1">Nombre:</label>
@@ -37,13 +163,23 @@
                 <label for="procedencia" class="block text-gray-700 font-medium mb-1">País de procedencia:</label>
                 <input type="text" id="procedencia" name="procedencia" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 transition-shadow">
             </div>
+            <div>
+                <label for="tiempo_creyente" class="block text-gray-700 font-medium mb-1">Tiempo como creyente:</label>
+                <input type="text" id="tiempo_creyente" name="tiempo_creyente" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 transition-shadow">
+            </div>
+            <div>
+                <label for="bautizado_agua" class="block text-gray-700 font-medium mb-1">¿Se bautizó en agua?:</label>
+                <select id="bautizado_agua" name="bautizado_agua" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 transition-shadow">
+                    <option value="N/A">Seleccione una opción</option>
+                    <option value="Si">Sí</option>
+                    <option value="No">No</option>
+                </select>
+            </div>
             <button type="submit" id="register-button" class="w-full bg-pink-600 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 hover:bg-pink-700 focus:outline-none focus:ring-4 focus:ring-pink-500 focus:ring-opacity-50 disabled:bg-pink-300">
                 Registrar
             </button>
         </form>
         <div id="message-container" class="mt-4 p-4 rounded-lg text-center hidden"></div>
-
-        <!-- Nuevo contenedor para mostrar la lista de usuarios -->
         <div id="user-list-container" class="mt-8">
             <h2 class="text-2xl font-bold text-gray-800 text-center mb-4">Usuarios Registrados</h2>
             <div id="user-list" class="space-y-4">
@@ -51,92 +187,5 @@
             </div>
         </div>
     </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const form = document.getElementById('registro-form');
-            const messageContainer = document.getElementById('message-container');
-            const registerButton = document.getElementById('register-button');
-            const userList = document.getElementById('user-list');
-
-            // Función para mostrar la lista de usuarios en la página
-            const displayUsers = () => {
-                userList.innerHTML = '';
-                try {
-                    const storedData = localStorage.getItem('registros_usuarios');
-                    if (storedData) {
-                        const registros = JSON.parse(storedData);
-                        if (registros.length === 0) {
-                            userList.innerHTML = '<p class="text-center text-gray-500">Aún no hay usuarios registrados.</p>';
-                            return;
-                        }
-                        registros.forEach((user, index) => {
-                            const userCard = document.createElement('div');
-                            userCard.className = 'bg-gray-100 p-4 rounded-lg shadow-sm';
-                            userCard.innerHTML = `
-                                <h3 class="font-bold text-gray-800">Usuario #${index + 1}</h3>
-                                <p class="text-sm text-gray-600"><strong>Nombre:</strong> ${user.nombre}</p>
-                                <p class="text-sm text-gray-600"><strong>Email:</strong> ${user.email}</p>
-                                <p class="text-sm text-gray-600"><strong>Celular:</strong> ${user.celular || 'N/A'}</p>
-                                <p class="text-sm text-gray-600"><strong>Edad:</strong> ${user.edad || 'N/A'}</p>
-                                <p class="text-sm text-gray-600"><strong>Residencia:</strong> ${user.residencia || 'N/A'}</p>
-                                <p class="text-sm text-gray-600"><strong>Procedencia:</strong> ${user.procedencia || 'N/A'}</p>
-                            `;
-                            userList.appendChild(userCard);
-                        });
-                    } else {
-                        userList.innerHTML = '<p class="text-center text-gray-500">Aún no hay usuarios registrados.</p>';
-                    }
-                } catch (error) {
-                    console.error("Error al mostrar los registros:", error);
-                    userList.innerHTML = '<p class="text-center text-red-500">Error al cargar los registros.</p>';
-                }
-            };
-
-            // Muestra los usuarios existentes al cargar la página
-            displayUsers();
-
-            form.addEventListener('submit', async (e) => {
-                e.preventDefault();
-
-                messageContainer.style.display = 'block';
-                messageContainer.textContent = 'Enviando datos...';
-                messageContainer.className = 'bg-blue-100 text-blue-800 border border-blue-200 p-3 rounded-lg font-bold text-center';
-                registerButton.disabled = true;
-
-                const formData = new FormData(form);
-                const data = Object.fromEntries(formData.entries());
-                
-                let registros = [];
-                try {
-                    const storedData = localStorage.getItem('registros_usuarios');
-                    if (storedData) {
-                        registros = JSON.parse(storedData);
-                    }
-                } catch (error) {
-                    console.error("Error al leer de localStorage:", error);
-                }
-
-                registros.push(data);
-
-                try {
-                    localStorage.setItem('registros_usuarios', JSON.stringify(registros));
-                    messageContainer.textContent = '¡Usuario registrado exitosamente!';
-                    messageContainer.className = 'bg-green-100 text-green-800 border border-green-200 p-3 rounded-lg font-bold text-center';
-                    form.reset();
-                    displayUsers(); // Actualiza la lista en la página
-                    console.log("Nuevo registro guardado:", data);
-                    console.log("Todos los registros en localStorage:", registros);
-
-                } catch (error) {
-                    messageContainer.textContent = 'Error al registrar: ' + error.message;
-                    messageContainer.className = 'bg-red-100 text-red-800 border border-red-200 p-3 rounded-lg font-bold text-center';
-                    console.error('Error al enviar el formulario:', error);
-                } finally {
-                    registerButton.disabled = false;
-                }
-            });
-        });
-    </script>
 </body>
 </html>
