@@ -202,3 +202,71 @@
                 auth = getAuth(app);
                 
                 // Autenticar al usuario
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (error) {
+                console.error("Error al inicializar Firebase:", error);
+                messageContainer.style.display = 'block';
+                messageContainer.innerHTML = 'Error de configuración. Revisa la consola para más detalles.';
+                messageContainer.className = 'error';
+                return;
+            }
+
+            registroForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                // Mostrar mensaje de carga y deshabilitar botón
+                if (messageContainer) {
+                    messageContainer.style.display = 'block';
+                    messageContainer.innerHTML = 'Registrando usuario... <span class="spinner"></span>';
+                    messageContainer.className = 'loading';
+                }
+                if (registerButton) {
+                    registerButton.disabled = true;
+                }
+
+                const formData = new FormData(registroForm);
+                const nuevoUsuario = {};
+                formData.forEach((value, key) => {
+                    nuevoUsuario[key] = value;
+                });
+                
+                try {
+                    // Verificar si el usuario está autenticado antes de intentar guardar
+                    if (!auth.currentUser) {
+                        throw new Error("El usuario no está autenticado. Por favor, recarga la página.");
+                    }
+
+                    // Guardar los datos en Firestore en la colección correcta
+                    await addDoc(collection(db, `/artifacts/${appId}/users/${auth.currentUser.uid}/registros`), {
+                        ...nuevoUsuario,
+                        timestamp: new Date()
+                    });
+
+                    // Mostrar mensaje de éxito
+                    if (messageContainer) {
+                        messageContainer.innerHTML = '¡Usuario registrado exitosamente!';
+                        messageContainer.className = 'success';
+                    }
+                    registroForm.reset();
+
+                } catch (error) {
+                    console.error('Error al registrar usuario en Firestore:', error);
+                    if (messageContainer) {
+                        messageContainer.innerHTML = `Error al registrar usuario: ${error.message}.`;
+                        messageContainer.className = 'error';
+                    }
+                } finally {
+                    // Volver a habilitar el botón
+                    if (registerButton) {
+                        registerButton.disabled = false;
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
