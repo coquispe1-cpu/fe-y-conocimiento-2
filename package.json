@@ -1,15 +1,17 @@
 {
-  "name": "fe-y-conocimiento",
+  "name": "fe-y-conocimiento-2",
   "version": "1.0.0",
-  "description": "Formulario de registro para la membresía",
+  "description": "",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
   "dependencies": {
     "axios": "^1.7.2",
     "cors": "^2.8.5",
     "express": "^4.19.2"
   }
 }
-
