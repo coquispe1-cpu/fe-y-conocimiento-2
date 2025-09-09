@@ -34,6 +34,7 @@
 
         let db, auth;
         let allUsers = []; // Cache de todos los usuarios
+        let isAuthReady = false;
         
         if (firebaseConfig) {
             try {
@@ -41,20 +42,85 @@
                 db = getFirestore(app);
                 auth = getAuth(app);
                 
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        console.log("Usuario autenticado con ID:", user.uid);
+                        isAuthReady = true;
+                        document.getElementById('user-id').textContent = `ID de Usuario: ${user.uid}`;
+                        
+                        // Carga los datos una vez que el usuario está autenticado
+                        const collectionPath = `artifacts/${appId}/public/data/registros`;
+                        const q = query(collection(db, collectionPath));
+                        
+                        onSnapshot(q, (querySnapshot) => {
+                            document.getElementById('loading-status').classList.add('hidden');
+                            document.getElementById('welcome-title').classList.remove('hidden');
+                            
+                            allUsers = [];
+                            const procedenciaOptions = new Set(['todos']);
+                            
+                            if (!querySnapshot.empty) {
+                                querySnapshot.forEach(doc => {
+                                    allUsers.push(doc);
+                                    const procedencia = doc.data().procedencia;
+                                    if (procedencia) {
+                                        procedenciaOptions.add(procedencia);
+                                    }
+                                });
+                            }
+
+                            const filterSelect = document.getElementById('filter-select');
+                            filterSelect.innerHTML = '';
+                            procedenciaOptions.forEach(option => {
+                                const optionElement = document.createElement('option');
+                                optionElement.value = option;
+                                optionElement.textContent = option.charAt(0).toUpperCase() + option.slice(1);
+                                filterSelect.appendChild(optionElement);
+                            });
+
+                            filterUsers(); // Renderiza la lista inicial y aplica cualquier filtro preexistente
+                        }, (error) => {
+                            const loadingStatus = document.getElementById('loading-status');
+                            loadingStatus.textContent = 'Error al cargar los registros: ' + error.message;
+                            loadingStatus.className = 'text-center text-red-600 font-bold';
+                            console.error("Error en onSnapshot:", error);
+                        });
+                        
+                    } else {
+                        isAuthReady = false;
+                        document.getElementById('user-id').textContent = "ID de Usuario: No autenticado";
+                        document.getElementById('loading-status').classList.remove('hidden');
+                        document.getElementById('loading-status').textContent = 'Iniciando sesión anónima...';
+                        console.log("Usuario no autenticado. Iniciando sesión anónima.");
+                    }
+                });
+
+                // Inicia el proceso de autenticación inmediatamente
                 if (initialAuthToken) {
                     signInWithCustomToken(auth, initialAuthToken).catch((error) => {
-                        console.error("Error al iniciar sesión con token personalizado:", error);
+                        console.error("Error al iniciar sesión con token personalizado. Intentando con sesión anónima.", error);
+                        signInAnonymously(auth);
                     });
                 } else {
                     signInAnonymously(auth).catch((error) => {
                         console.error("Error al iniciar sesión de forma anónima:", error);
+                        const loadingStatus = document.getElementById('loading-status');
+                        loadingStatus.textContent = 'Error de autenticación: ' + error.message;
+                        loadingStatus.className = 'text-center text-red-600 font-bold';
                     });
                 }
+                
             } catch (error) {
                 console.error("Error al inicializar Firebase:", error);
+                const loadingStatus = document.getElementById('loading-status');
+                loadingStatus.textContent = 'Error al inicializar la base de datos: ' + error.message;
+                loadingStatus.className = 'text-center text-red-600 font-bold';
             }
         } else {
             console.error("La configuración de Firebase no está definida. La aplicación no podrá guardar datos.");
+            const loadingStatus = document.getElementById('loading-status');
+            loadingStatus.textContent = 'Error: La configuración de la base de datos no está disponible.';
+            loadingStatus.className = 'text-center text-red-600 font-bold';
         }
 
         // Función para renderizar la lista de usuarios
@@ -90,7 +156,10 @@
 
             document.querySelectorAll('.delete-button').forEach(button => {
                 button.addEventListener('click', async (e) => {
-                    if (!db) return;
+                    if (!db || !isAuthReady) {
+                        showModal('Error: No se puede conectar a la base de datos o el usuario no está autenticado.');
+                        return;
+                    }
                     const docId = e.target.dataset.id;
                     const path = `artifacts/${appId}/public/data/registros/${docId}`;
                     try {
@@ -134,10 +203,6 @@
         document.addEventListener('DOMContentLoaded', () => {
             const form = document.getElementById('registro-form');
             const registerButton = document.getElementById('register-button');
-            const userIdDisplay = document.getElementById('user-id');
-            const loadingStatus = document.getElementById('loading-status');
-            const welcomeTitle = document.getElementById('welcome-title');
-            
             const modal = document.getElementById('myModal');
             const closeModalButton = document.querySelector('.close-button');
             const modalMessage = document.getElementById('modalMessage');
@@ -160,55 +225,6 @@
                 }
             }
             
-            // Escuchando los cambios de autenticación
-            onAuthStateChanged(auth, (user) => {
-                if (user) {
-                    userIdDisplay.textContent = `ID de Usuario: ${user.uid}`;
-                    console.log("Usuario autenticado con ID:", user.uid);
-                    
-                    const collectionPath = `artifacts/${appId}/public/data/registros`;
-                    const q = query(collection(db, collectionPath));
-                    
-                    onSnapshot(q, (querySnapshot) => {
-                        loadingStatus.classList.add('hidden');
-                        welcomeTitle.classList.remove('hidden');
-                        
-                        allUsers = [];
-                        const procedenciaOptions = new Set(['todos']);
-                        
-                        if (!querySnapshot.empty) {
-                            querySnapshot.forEach(doc => {
-                                allUsers.push(doc);
-                                const procedencia = doc.data().procedencia;
-                                if (procedencia) {
-                                    procedenciaOptions.add(procedencia);
-                                }
-                            });
-                        }
-
-                        const filterSelect = document.getElementById('filter-select');
-                        filterSelect.innerHTML = '';
-                        procedenciaOptions.forEach(option => {
-                            const optionElement = document.createElement('option');
-                            optionElement.value = option;
-                            optionElement.textContent = option.charAt(0).toUpperCase() + option.slice(1);
-                            filterSelect.appendChild(optionElement);
-                        });
-
-                        filterUsers(); // Renderiza la lista inicial y aplica cualquier filtro preexistente
-                    }, (error) => {
-                        loadingStatus.textContent = 'Error al cargar los registros: ' + error.message;
-                        loadingStatus.className = 'text-center text-red-600 font-bold';
-                        console.error("Error en onSnapshot:", error);
-                    });
-                } else {
-                    userIdDisplay.textContent = "ID de Usuario: No autenticado";
-                    loadingStatus.classList.remove('hidden');
-                    loadingStatus.textContent = 'Iniciando sesión anónima...';
-                    console.log("Usuario no autenticado. Iniciando sesión anónima.");
-                }
-            });
-
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 
