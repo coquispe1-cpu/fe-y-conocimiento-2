@@ -16,6 +16,7 @@
         
         setLogLevel('Debug');
         
+        // Variables globales proporcionadas por el entorno de Canvas
         const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : null);
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
@@ -68,11 +69,13 @@
                             <p class="text-sm text-gray-600"><strong>Bautizado en agua:</strong> ${user.bautizado_agua || 'N/A'}</p>
                             <p class="text-sm text-gray-600"><strong>Bautismo del Espíritu Santo:</strong> ${user.bautismo_espiritu_santo || 'N/A'}</p>
                         </div>
+                        <!-- Botón para eliminar el registro -->
                         <button class="delete-button bg-red-500 text-white font-bold py-1 px-3 rounded-lg hover:bg-red-600 transition-colors" data-id="${user.id}">Eliminar</button>
                     `;
                     userList.appendChild(userCard);
                 });
 
+                // Añadir un listener al botón de eliminar para cada usuario
                 document.querySelectorAll('.delete-button').forEach(button => {
                     button.addEventListener('click', async (e) => {
                         const docId = e.target.dataset.id;
