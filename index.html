@@ -10,40 +10,38 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // IMPORTANTE: REEMPLAZA ESTE OBJETO CON TU PROPIA CONFIGURACIÓN DE FIREBASE
+        // Puedes encontrar esta información en la consola de tu proyecto de Firebase.
+        const firebaseConfig = {
+            apiKey: "TU_API_KEY",
+            authDomain: "TU_AUTH_DOMAIN",
+            projectId: "TU_PROJECT_ID",
+            storageBucket: "TU_STORAGE_BUCKET",
+            messagingSenderId: "TU_MESSAGING_SENDER_ID",
+            appId: "TU_APP_ID"
+        };
         
+        // --- NO MODIFICAR EL CÓDIGO DE AQUÍ EN ADELANTE ---
+
         setLogLevel('Debug');
         
-        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : null);
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-
-        if (!firebaseConfig) {
-            console.error("Firebase config is not defined. The form will not be able to register users.");
+        // Verifica si la configuración de Firebase es válida
+        if (!firebaseConfig.apiKey || firebaseConfig.apiKey === "TU_API_KEY") {
+            console.error("Firebase config is not set. Please replace the placeholder values with your own configuration.");
+            alert("Error: Por favor, configura Firebase en el código.");
         } else {
             const app = initializeApp(firebaseConfig);
             const db = getFirestore(app);
             const auth = getAuth(app);
             
-            // This is a critical step for authentication in the Canvas environment.
-            if (initialAuthToken) {
-                signInWithCustomToken(auth, initialAuthToken).catch((error) => {
-                    console.error("Error signing in with custom token:", error);
-                });
-            } else {
-                signInAnonymously(auth).catch((error) => {
-                    console.error("Error signing in anonymously:", error);
-                });
-            }
-
-            onAuthStateChanged(auth, (user) => {
-                if (user) {
-                    console.log("User is authenticated with ID:", user.uid);
-                } else {
-                    console.log("User is not authenticated.");
-                }
+            // Inicia sesión anónimamente para obtener un ID de usuario.
+            // Esto permite que el formulario registre datos de forma segura.
+            signInAnonymously(auth).catch((error) => {
+                console.error("Error signing in anonymously:", error);
             });
 
             document.addEventListener('DOMContentLoaded', () => {
@@ -62,8 +60,16 @@
                     const formData = new FormData(form);
                     const data = Object.fromEntries(formData.entries());
                     
-                    const userId = auth.currentUser?.uid || 'anonymous';
-                    const collectionPath = `artifacts/${appId}/users/${userId}/registros`;
+                    const userId = auth.currentUser?.uid;
+                    const collectionPath = `users/${userId}/registros`;
+
+                    // Si no se pudo obtener un ID de usuario, muestra un error.
+                    if (!userId) {
+                        messageContainer.textContent = 'Error: No se pudo autenticar al usuario. Intenta de nuevo.';
+                        messageContainer.className = 'bg-red-100 text-red-800 border border-red-200 p-3 rounded-lg font-bold text-center';
+                        registerButton.disabled = false;
+                        return;
+                    }
 
                     try {
                         const docRef = await addDoc(collection(db, collectionPath), data);
@@ -118,4 +124,4 @@
         <div id="message-container" class="mt-4 p-4 rounded-lg text-center hidden"></div>
     </div>
 </body>
-</html>
+</h
