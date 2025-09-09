@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registro de Usuario Local</title>
+    <title>Registro de Usuario Web</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -12,21 +12,14 @@
         body {
             font-family: 'Inter', sans-serif;
         }
-        .modal {
-            transition: opacity 0.3s ease-in-out;
-        }
-        .modal.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
     </style>
 </head>
-<body class="bg-slate-900 flex flex-col justify-center items-center min-h-screen p-4">
-    <div class="bg-white p-8 md:p-12 rounded-xl shadow-2xl w-full max-w-lg transition-all duration-500 ease-in-out">
+<body class="bg-slate-900 flex justify-center items-center min-h-screen p-4">
+    <div class="bg-white p-8 md:p-12 rounded-xl shadow-2xl w-full max-w-lg">
         <h1 class="text-3xl md:text-4xl font-extrabold text-center text-gray-900 mb-6">Registro de Usuario</h1>
-        <p class="text-center text-gray-500 mb-4 text-sm">Esta versión guarda los datos localmente en tu navegador. No se necesita conexión a una base de datos.</p>
+        <p class="text-center text-gray-500 mb-4 text-sm">Este formulario envía los datos directamente a tu correo electrónico usando un servicio web. No se necesita una base de datos ni servidor.</p>
 
-        <form id="registro-form" class="space-y-4">
+        <form id="registro-form" action="https://formspree.io/f/xkgvyoaz" method="POST" class="space-y-4">
             <div>
                 <label for="nombre" class="block text-gray-700 font-medium mb-1">Nombre:</label>
                 <input type="text" id="nombre" name="nombre" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 transition-shadow">
@@ -77,186 +70,10 @@
                     <option value="No">No</option>
                 </select>
             </div>
-            <button type="submit" id="register-button" class="w-full bg-pink-600 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 hover:bg-pink-700 focus:outline-none focus:ring-4 focus:ring-pink-500 focus:ring-opacity-50 disabled:bg-pink-300">
+            <button type="submit" id="register-button" class="w-full bg-pink-600 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 hover:bg-pink-700 focus:outline-none focus:ring-4 focus:ring-pink-500 focus:ring-opacity-50">
                 Registrar
             </button>
         </form>
-
-        <div class="mt-8 pt-8 border-t border-gray-200">
-            <h2 id="welcome-title" class="text-2xl font-bold text-center text-gray-900 mb-4">Usuarios Registrados (Local)</h2>
-            
-            <!-- Barra de búsqueda y filtro -->
-            <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 mb-4">
-                <input type="text" id="search-input" placeholder="Buscar por nombre, email, etc." class="flex-grow px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500">
-                <select id="filter-select" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500">
-                    <option value="todos">Filtrar por Procedencia</option>
-                </select>
-            </div>
-
-            <div id="user-list" class="space-y-4">
-                <!-- Los usuarios se mostrarán aquí -->
-            </div>
-        </div>
     </div>
-    
-    <!-- Modal para mensajes de éxito/error -->
-    <div id="myModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden modal">
-        <div class="bg-white p-5 rounded-md shadow-lg w-11/12 max-w-sm">
-            <div class="mt-3 text-center">
-                <p id="modalMessage" class="text-lg leading-6 font-medium text-gray-900"></p>
-                <div class="mt-4">
-                    <button class="close-button px-4 py-2 bg-pink-600 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500">
-                        Cerrar
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <script>
-        // Función para mostrar un mensaje en un modal
-        function showModal(message) {
-            const modal = document.getElementById('myModal');
-            const modalMessage = document.getElementById('modalMessage');
-            modalMessage.textContent = message;
-            modal.classList.remove('hidden');
-        }
-
-        // Cerrar el modal
-        document.querySelector('.close-button').onclick = () => {
-            document.getElementById('myModal').classList.add('hidden');
-        };
-        window.onclick = (event) => {
-            if (event.target === document.getElementById('myModal')) {
-                document.getElementById('myModal').classList.add('hidden');
-            }
-        };
-
-        let allUsers = [];
-
-        function saveUser(user) {
-            const users = JSON.parse(localStorage.getItem('users')) || [];
-            users.push(user);
-            localStorage.setItem('users', JSON.stringify(users));
-        }
-
-        function deleteUser(idToDelete) {
-            let users = JSON.parse(localStorage.getItem('users')) || [];
-            users = users.filter(user => user.id !== idToDelete);
-            localStorage.setItem('users', JSON.stringify(users));
-            loadUsers();
-        }
-        
-        function loadUsers() {
-            allUsers = JSON.parse(localStorage.getItem('users')) || [];
-            renderUserList(allUsers);
-            updateProcedenciaFilter();
-        }
-
-        function updateProcedenciaFilter() {
-            const procedenciaOptions = new Set(['todos']);
-            allUsers.forEach(user => {
-                if (user.procedencia) {
-                    procedenciaOptions.add(user.procedencia);
-                }
-            });
-            const filterSelect = document.getElementById('filter-select');
-            filterSelect.innerHTML = '';
-            procedenciaOptions.forEach(option => {
-                const optionElement = document.createElement('option');
-                optionElement.value = option;
-                optionElement.textContent = option.charAt(0).toUpperCase() + option.slice(1);
-                filterSelect.appendChild(optionElement);
-            });
-        }
-
-        function renderUserList(usersToDisplay) {
-            const userList = document.getElementById('user-list');
-            userList.innerHTML = '';
-            
-            if (usersToDisplay.length === 0) {
-                userList.innerHTML = '<p class="text-center text-gray-500">No hay usuarios registrados.</p>';
-                return;
-            }
-
-            usersToDisplay.forEach((userData) => {
-                const userCard = document.createElement('div');
-                userCard.className = 'bg-gray-100 p-4 rounded-lg shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center';
-                userCard.innerHTML = `
-                    <div class="mb-2 sm:mb-0">
-                        <p class="text-sm text-gray-800 font-bold">Nombre: ${userData.nombre}</p>
-                        <p class="text-xs text-gray-600">Email: ${userData.email}</p>
-                        <p class="text-xs text-gray-600">Celular: ${userData.celular || 'N/A'}</p>
-                        <p class="text-xs text-gray-600">Edad: ${userData.edad || 'N/A'}</p>
-                        <p class="text-xs text-gray-600">Residencia: ${userData.residencia || 'N/A'}</p>
-                        <p class="text-xs text-gray-600">Procedencia: ${userData.procedencia || 'N/A'}</p>
-                        <p class="text-xs text-gray-600">Tiempo como creyente: ${userData.tiempo_creyente || 'N/A'}</p>
-                        <p class="text-xs text-gray-600">Bautizado en agua: ${userData.bautizado_agua || 'N/A'}</p>
-                        <p class="text-xs text-gray-600">Bautismo del Espíritu Santo: ${userData.bautismo_espiritu_santo || 'N/A'}</p>
-                    </div>
-                    <button class="delete-button bg-red-500 text-white text-xs font-bold py-1 px-3 rounded-lg hover:bg-red-600 transition-colors mt-2 sm:mt-0" data-id="${userData.id}">Eliminar</button>
-                `;
-                userList.appendChild(userCard);
-            });
-
-            document.querySelectorAll('.delete-button').forEach(button => {
-                button.addEventListener('click', (e) => {
-                    const idToDelete = e.target.dataset.id;
-                    if (idToDelete) {
-                        deleteUser(idToDelete);
-                        showModal('Registro eliminado con éxito.');
-                    }
-                });
-            });
-        }
-
-        function filterUsers() {
-            const searchQuery = document.getElementById('search-input').value.toLowerCase();
-            const filterValue = document.getElementById('filter-select').value;
-            
-            let filteredUsers = allUsers;
-
-            if (searchQuery) {
-                filteredUsers = filteredUsers.filter(userData => {
-                    return Object.values(userData).some(value => 
-                        (typeof value === 'string' && value.toLowerCase().includes(searchQuery))
-                    );
-                });
-            }
-
-            if (filterValue !== 'todos') {
-                filteredUsers = filteredUsers.filter(userData => {
-                    return userData.procedencia === filterValue;
-                });
-            }
-
-            renderUserList(filteredUsers);
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const form = document.getElementById('registro-form');
-            const registerButton = document.getElementById('register-button');
-
-            loadUsers(); // Carga la lista inicial al cargar la página
-
-            document.getElementById('search-input').addEventListener('input', filterUsers);
-            document.getElementById('filter-select').addEventListener('change', filterUsers);
-            
-            form.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                
-                registerButton.disabled = true;
-                const formData = new FormData(form);
-                const data = Object.fromEntries(formData.entries());
-                data.id = Date.now().toString(); // Asigna un ID único
-                
-                saveUser(data);
-                showModal('¡Registro exitoso!');
-                form.reset();
-                loadUsers();
-                registerButton.disabled = false;
-            });
-        });
-    </script>
 </body>
 </html>
