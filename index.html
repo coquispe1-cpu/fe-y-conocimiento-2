@@ -32,9 +32,11 @@
         // Verifica si la configuración de Firebase es válida
         if (!firebaseConfig.apiKey || firebaseConfig.apiKey === "TU_API_KEY") {
             const messageContainer = document.getElementById('message-container');
-            messageContainer.style.display = 'block';
-            messageContainer.textContent = "Error: Por favor, configura Firebase en el código. Abre el archivo y reemplaza los valores de 'firebaseConfig'.";
-            messageContainer.className = 'bg-red-100 text-red-800 border border-red-200 p-3 rounded-lg font-bold text-center';
+            if(messageContainer) {
+              messageContainer.style.display = 'block';
+              messageContainer.textContent = "Error: Por favor, configura Firebase en el código. Abre el archivo y reemplaza los valores de 'firebaseConfig'.";
+              messageContainer.className = 'bg-red-100 text-red-800 border border-red-200 p-3 rounded-lg font-bold text-center';
+            }
             console.error("Firebase config is not set. Please replace the placeholder values with your own configuration.");
         } else {
             const app = initializeApp(firebaseConfig);
@@ -96,6 +98,13 @@
     <div class="bg-white p-8 md:p-12 rounded-xl shadow-2xl w-full max-w-lg transition-all duration-500 ease-in-out">
         <h1 class="text-3xl md:text-4xl font-extrabold text-center text-gray-900 mb-6">Registro de Usuario</h1>
         <form id="registro-form" class="space-y-4">
+            <div class="bg-orange-100 text-orange-800 border border-orange-200 p-3 rounded-lg font-bold text-center mb-4">
+                <h2 class="font-extrabold text-xl mb-2">¡Paso importante!</h2>
+                <p>Para que el formulario funcione, debes reemplazar los valores de `firebaseConfig` en el código con los de tu propio proyecto de Firebase. 
+
+[Image of a data server]
+</p>
+            </div>
             <div>
                 <label for="nombre" class="block text-gray-700 font-medium mb-1">Nombre:</label>
                 <input type="text" id="nombre" name="nombre" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 transition-shadow">
